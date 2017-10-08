@@ -150,11 +150,6 @@ map_svg.append("path")
     })
 
 
-
-
-
-
-
       map_svg.selectAll("path.country")
       
       // set fill color for country
@@ -952,7 +947,6 @@ d3.queue()
       .attr("text-anchor", "end")
       .attr("class", "label active-metric-label")
       .text(metric_lookup[active_metric].name + " (" + metric_lookup[active_ymetric].units+ ")");
-
 
   // Create label for current year
     var year_label = svg.append("text")
