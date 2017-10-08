@@ -55,8 +55,6 @@ var svg = d3.select("body")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-
-
 //
 // Create map_container
 //
@@ -88,9 +86,6 @@ var path = d3.geoPath()
 
 // graticule is a grid that shows lat/lon grid over Earth
 var graticule = d3.geoGraticule();
-
-
-
 
 
 // append SVG inside the map_container, set to same width of the containing div
@@ -138,7 +133,9 @@ map_svg.append("path")
         .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
         .attr("class", "boundary")
         .attr("d", path);
-    })
+
+    }
+  )
       
     // Create look-up table with iso3 codes to match map IDs
     d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
