@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+body {
+  margin: 0;
+  font-family: arial, sans;
+}
+
+.label {
+  font-size: 20px;
+}
+
+.legend{
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.axis text {
+  font-size: 15px;
+  fill: #333;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke-width:1px;
+  stroke: #e7e7e7;
+}
+
+circle {
+  stroke: #fff;
+}
+
+.bubble {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+</style>
+<body>
+</body>
+
+<script src="//d3js.org/d3.v4.js"></script>
+<script>
+var margin = { top: 50, right: 50, bottom: 50, left: 50 };
+var width = 960 - margin.left - margin.right;
+var height = 960 - margin.top - margin.bottom;
+
+var svg = d3.select("body")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var xscale = d3.scaleLinear()
+  .domain([-100,1500])
+  .range([0,width]);
+
+var yscale = d3.scaleLinear()
+  .domain([-100,500])
+  .range([height,0]);
+
+var radius = d3.scaleSqrt()
+  .range([4,8]);
+
+var xAxis = d3.axisBottom()
+  .tickSize(-height)
+  .tickFormat(function(d) { return d3.format(".0%")(d/100); })
+  .scale(xscale);
+
+var yAxis = d3.axisLeft()
+  .tickFormat(function(d) { return d3.format(".0%")(d/100); })
+  .tickSize(-width)
+  .scale(yscale)
+
+d3.csv("../data/country_slim_8.28.17.csv", function(error, data) {
+  // data pre-processing
+  data.forEach(function(d) {
+    d.y = +(d["GDP 2000-2015"].replace("%",""));
+    d.x = +(d["CO2 2000-2015"].replace("%",""));
+    d.r = 1;
+  });
+  console.log(d3.max(data, function(d) { return d.x; }))
+
+  data.sort(function(a,b) { return b.r - a.r; });
+
+  radius.domain(d3.extent(data, function(d) {
+    return d.r;
+  })).nice();
+
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .attr("class", "x axis")
+    .call(xAxis);
+
+  svg.append("g")
+    .attr("transform", "translate(0,0)")
+    .attr("class", "y axis")
+    .call(yAxis);
+
+  var group = svg.selectAll("g.bubble")
+    .data(data)
+    .enter().append("g")
+    .attr("class", "bubble")
+    .attr("transform", function(d) {
+      return "translate(" + xscale(d.x) + "," + yscale(d.y) + ")"
+    });
+
+  group
+    .append("circle")
+    .attr("r", function(d) { return radius(d.r);  })
+    .style("fill", function(d) {
+      return "#777";
+    })
+
+  svg.append("text")
+    .attr("x", 6)
+    .attr("y", -2)
+    .attr("class", "label")
+    .text("GDP 2000-2015");
+
+  svg.append("text")
+    .attr("x", width-2)
+    .attr("y", height-6)
+    .attr("text-anchor", "end")
+    .attr("class", "label")
+    .text("CO2 2000-2015");
+});
+</script>

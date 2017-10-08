@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+body {
+  margin: 0;
+  font-family: arial, sans;
+}
+
+.label {
+  font-size: 24px;
+}
+
+.legend{
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.axis text {
+  font-size: 18px;
+  fill: #333;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke-width:1px;
+  stroke: #e7e7e7;
+}
+
+circle {
+  stroke: #fff;
+}
+
+.bubble {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+</style>
+<body>
+</body>
+
+<script src="//d3js.org/d3.v4.js"></script>
+<script>
+var exclude = ["Samoa", "Libya"];
+
+var margin = { top: 50, right: 50, bottom: 50, left: 50 };
+var width = 960 - margin.left - margin.right;
+var height = 960 - margin.top - margin.bottom;
+
+var lookup = {};
+
+var svg = d3.select("body")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var xscale = d3.scaleLinear()
+  .domain([-0.5,0.5])
+  .range([0,width])
+  .clamp("true");
+
+var yscale = d3.scaleLinear()
+  .domain([-0.4,0.5])
+  .range([height,0])
+  .clamp("true");
+
+var radius = d3.scaleSqrt()
+  .range([4,8]);
+
+var xAxis = d3.axisBottom()
+  .tickSize(-height)
+  .tickFormat(function(d) { return d3.format(".0%")(d); })
+  .scale(xscale);
+
+var yAxis = d3.axisLeft()
+  .tickFormat(function(d) { return d3.format(".0%")(d); })
+  .tickSize(-width)
+  .scale(yscale)
+
+d3.queue()
+  .defer(d3.csv, "../data/Country_GDPs.csv")
+  .defer(d3.csv, "../data/CO2_annual_change_2000-2015.csv")
+  .await(function(error, raw_gdp, raw_co2) {
+
+    raw_gdp.forEach(function(d) {
+      lookup[d["Country Name"]] = lookup[d["Country Name"]] || {};
+      lookup[d["Country Name"]]["GDP"] = d;
+    });
+    raw_co2.forEach(function(d) {
+      lookup[d["Country Name"]] = lookup[d["Country Name"]] || {};
+      lookup[d["Country Name"]]["CO2"] = d;
+    });
+
+    var countries = d3.keys(lookup);
+
+    svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .attr("class", "x axis")
+      .call(xAxis);
+
+    svg.append("g")
+      .attr("transform", "translate(0,0)")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+    var group = svg.selectAll("g.bubble")
+      .data(countries.filter(function(d) { 
+        return exclude.indexOf(d) == -1;
+      }))
+      .enter().append("g")
+      .attr("class", "bubble")
+      .attr("transform", function(d) {
+        return "translate(" + xscale(+lookup[d]["CO2"]["2000"]) + "," + yscale(+lookup[d]["GDP"]["2000"]) + ")"
+      });
+
+    group
+      .append("circle")
+      .attr("r", function(d) { return 4.5;  })
+      .style("fill", function(d) {
+        return "#777";
+      })
+
+    svg.append("text")
+      .attr("x", 6)
+      .attr("y", -5)
+      .attr("class", "label")
+      .text("GDP Change");
+
+    var year_label = svg.append("text")
+      .attr("x", width-2)
+      .attr("y", -5)
+      .attr("class", "label")
+      .attr("text-anchor", "end")
+      .style("font-weight", "bold")
+      .style("font-size", "36px")
+      .text("2000");
+
+    svg.append("text")
+      .attr("x", width-2)
+      .attr("y", height-6)
+      .attr("text-anchor", "end")
+      .attr("class", "label")
+      .text("CO2 Change");
+
+    var year = 2000;
+    
+    function nextYear() {
+      year++;
+      if (year > 2015) { year = 2000; }
+
+      year_label.text(year);
+      svg.selectAll("g.bubble")
+        .transition()
+        .duration(400)
+        .attr("transform", function(d) {
+          return "translate(" + xscale(+lookup[d]["CO2"][year]) + "," + yscale(+lookup[d]["GDP"][year]) + ")"
+        });
+      setTimeout(nextYear, 700);
+    };
+
+    setTimeout(nextYear, 700);
+  });
+</script>

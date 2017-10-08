@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://use.typekit.net/ezo4zbn.css">
+<style type="text/css">
+body {
+  margin: 20px;
+  font-family: acumin-pro-condensed, arial, sans;
+}
+
+.label,
+.label2 {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.legend{
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.axis text {
+  font-size: 15px;
+  fill: #333;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke-width:1px;
+  stroke: #e7e7e7;
+}
+
+circle {
+  stroke: #fff;
+  opacity: 0.7;
+}
+</style>
+<body>
+<h1>GHG-GDP Divergence Index</h1>
+<a href="#" id="transition-index">Transition to Index</a><br/>
+</body>
+
+<script src="//d3js.org/d3.v4.js"></script>
+<script>
+var margin = { top: 50, right: 50, bottom: 50, left: 50 };
+var width = 960 - margin.left - margin.right;
+var height = 960 - margin.top - margin.bottom;
+
+var svg = d3.select("body")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var xscale = d3.scaleLinear()
+  .domain([-100,1500])
+  .range([0,width]);
+
+var yscale = d3.scaleLinear()
+  .domain([-100,500])
+  .range([height,0]);
+
+var zscale = d3.scaleLinear()
+  .domain([6,0,-6])
+  .range([0,height/2,height])
+  .clamp(true);
+
+var color = d3.scaleThreshold()
+  .domain([-0.05, 0, 0.5, 0.75, 1])
+  .range(["#d73027","#f46d43","#fdae61","#abd9e9","#74add1","#4575b4"]);
+
+var xAxis = d3.axisBottom()
+  .tickSize(-height)
+  .tickFormat(function(d) { return d3.format(".0%")(d/100); })
+  .scale(xscale);
+
+var yAxis = d3.axisLeft()
+  .tickFormat(function(d) { return d3.format(".0%")(d/100); })
+  .tickSize(-width)
+  .scale(yscale);
+
+var zAxis = d3.axisRight()
+//  .tickValues([-100,-80,-60,-40,-20,0,2,4,6,8])
+  .scale(zscale);
+
+var radius = d3.scaleSqrt()
+  .range([2.5,20])
+  .domain([0, 3000]);
+
+var lookup = {};
+
+d3.queue()
+.defer(d3.csv, "../data/country_slim_8.28.17.csv")
+.defer(d3.csv, "../data/absolute country annual carbon emissions 2000-2015.csv")
+.await(function(error, data, abs_carbon) {
+  abs_carbon.forEach(function(d) {
+    lookup[d["country"]] = lookup[d["country"]] || {};
+    lookup[d["country"]]["abs_carbon"] = d;
+  });
+
+  // data pre-processing
+  data.forEach(function(d) {
+    d.y = +(d["GDP 2000-2015"].replace("%",""));
+    d.x = +(d["CO2 2000-2015"].replace("%",""));
+    d.z = +(d["Index of GHG-GDP Divergence"]);
+    if (d["Country Name"] in lookup) {
+      d.r = lookup[d["Country Name"]]["abs_carbon"]["2015"];
+    } else {
+      d.r = 0;
+    }
+  });
+
+  console.log(d3.min(data, function(d) { return d.z; }))
+
+  data.sort(function(a,b) { return b.r - a.r; });
+
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .attr("class", "x axis")
+    .style("opacity", 1)
+    .call(xAxis);
+
+  svg.append("g")
+    .attr("transform", "translate(0,0)")
+    .attr("class", "y axis")
+    .style("opacity", 1)
+    .call(yAxis);
+
+  svg.append("g")
+    .attr("transform", "translate(" + width/2 + ",0)")
+    .attr("class", "z axis")
+    .style("opacity", 0)
+    .call(zAxis);
+
+  var group = svg.selectAll("g.bubble")
+    .data(data)
+    .enter().append("g")
+    .attr("class", "bubble")
+    .attr("transform", function(d) {
+      return "translate(" + xscale(d.x) + "," + yscale(d.y) + ")"
+    });
+
+  group
+    .append("circle")
+    .attr("r", function(d) { return radius(d.r);  })
+    .style("fill", function(d) {
+      return color(d.z);
+    })
+
+  svg.append("text")
+    .attr("x", 6)
+    .attr("y", -2)
+    .attr("class", "label")
+    .style("opacity", 1)
+    .text("GDP 2000-2015");
+
+  svg.append("text")
+    .attr("x", width-2)
+    .attr("y", height-6)
+    .attr("text-anchor", "end")
+    .attr("class", "label")
+    .style("opacity", 1)
+    .text("CO2 2000-2015");
+
+  svg.append("text")
+    .attr("x", width/2+40)
+    .attr("y", height/4+30)
+    .attr("text-anchor", "start")
+    .attr("class", "label2")
+    .style("opacity", 0)
+    .text("Index of GHG-GDP Divergence");
+
+  svg.append("foreignObject")
+    .attr("x", width/2+40)
+    .attr("y", height/4+46)
+    .attr("width", 380)
+    .attr("height", 300)
+    .attr("class", "explainer")
+    .style("opacity", 0)
+    .append("xhtml:div")
+    .html("An index was developed to characterize countries’ GHG-GDP divergence, or lack thereof, based on changes in annual carbon emissions and GDP over time. The equation for the index of country-level GHG-GDP divergence is as follows: <img src='../final-data/equation.png'/>, where i refers to the time period of interest. In addition to serving as the basis for the map scaling, the index values are used to explore the interaction of a dozen separate social and economic metrics with countries’ GHG-GDP trajectory over time")  
+
+  function animate() {
+    group
+      .transition()
+      .duration(1200)
+      .delay(function(d,i) {
+        return 20*i;  
+      })
+      .attr("transform", function(d) {
+        return "translate(" + width/2 + "," + (zscale(d.z)) + ")"
+      });
+
+    svg.select(".x.axis")
+      .transition()
+      .duration(400)
+      .style("opacity", 0);
+
+    svg.select(".y.axis")
+      .transition()
+      .duration(400)
+      .style("opacity", 0);
+
+    svg.select(".z.axis")
+      .transition()
+      .duration(800)
+      .style("opacity", 1);
+
+    svg.selectAll(".label")
+      .transition()
+      .duration(800)
+      .style("opacity", 0);
+
+    svg.selectAll(".label2")
+      .transition()
+      .delay(1200)
+      .duration(800)
+      .style("opacity", 1);
+
+    svg.selectAll(".explainer")
+      .transition()
+      .delay(1200)
+      .duration(800)
+      .style("opacity", 1);
+
+  };
+
+  d3.select("#transition-index").on("click", function(d) {
+    animate();
+    d3.select(this)
+      .style("opacity", 1)
+      .transition()
+      .style("opacity", 0)
+  });
+});
+</script>
