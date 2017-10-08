@@ -33,6 +33,24 @@ var exclude = ["AFG", "COD", "LBY", "LCA", "LIE", "LSO", "MCO", "MDA", "NRU", "P
 // List all metrics, for looping over
 //
 
+//
+// Text and unit formatters, have to be defined above metric_lookup
+//
+
+var format = d3.format(".0%");
+
+var default_format = d3.format(",.2r");
+
+var format_si = d3.format(".2s");
+
+function format_abbrev(x) {
+  var s = format_si(x);
+  switch (s[s.length - 1]) {
+    case "G": return s.slice(0, -1) + "B";
+  }
+  return s;
+}
+
 var metrics = [
    "index_territorial", 
    "consumption_co2", 
@@ -205,23 +223,7 @@ var metric_lookup = {
 
 
 
-//
-// Text and unit formatters
-//
 
-var format = d3.format(".0%");
-
-var default_format = d3.format(",.2r");
-
-var format_si = d3.format(".2s");
-
-function format_abbrev(x) {
-  var s = format_si(x);
-  switch (s[s.length - 1]) {
-    case "G": return s.slice(0, -1) + "B";
-  }
-  return s;
-}
 
 
 
