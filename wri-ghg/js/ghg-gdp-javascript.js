@@ -150,18 +150,11 @@ map_svg.append("path")
     })
 
 
-      group
-        .append("text")
-        .attr("y", -20)
-        .attr("text-anchor", "middle")
-        .style("font-weight", "bold")
-        .text(function(d) {
-          return d in idLookup ? idLookup[d].name : "";
-        })
-        .style("display", "none");
 
-      
-      
+
+
+
+
       map_svg.selectAll("path.country")
       
       // set fill color for country
@@ -329,6 +322,122 @@ map_svg.append("path")
 //
 // Create scatterplot
 //
+
+// Create bubbles, sort them according to which has more abs_carbon
+// 
+
+    var group = svg.selectAll("g.bubble")
+      .data(countries.filter(function(d) {
+        return d && exclude.indexOf(d) == -1;
+      }))
+      .enter().append("g")
+      .sort(function(a,b) {
+        return +lookup[b]["abs_carbon"][year].replace(",","") - (+lookup[a]["abs_carbon"][year].replace(",",""));
+      })
+      .attr("class", "bubble")
+      .attr("transform", function(d) {
+        return "translate(" + xscale(+lookup[d][active_metric][year]) + "," + yscale(+lookup[d][active_ymetric][year]) + ")"
+      });
+      
+// Sets the country names for every bubble
+    group
+      .append("text")
+      .attr("y", -20)
+      .attr("text-anchor", "middle")
+      .style("font-weight", "bold")
+      .text(function(d) {
+        return d in idLookup ? idLookup[d].name : "";
+      })
+      .style("display", "none");
+
+
+
+    group
+      .append("circle")
+      .attr("r", function(d) {
+        return radius(+lookup[d]["abs_carbon"][year].replace(",",""));
+      })
+      .style("fill", function(d) {
+        return "#777";
+      })
+      .on("click", function(d) {
+        console.log(d);
+      })
+      .on("mouseover", function(d) {
+        var country = d;
+        if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
+        if (!(country in lookup)) { return "#eaeaea"; }
+        selected_country = country;
+        var datum = lookup[country];
+
+        d3.selectAll(".country-label").text(idLookup[d].name);
+
+        map_svg.selectAll("path.country")
+          .style("opacity", function(p) {
+            return p.id == String(+idLookup[d]["country-code"]) ? 1 : 0.3;
+          })
+          .style("stroke", function(p) {
+            return p.id == String(+idLookup[d]["country-code"]) ? "#222" : null;
+          });
+
+        tooltip.style("display", null).html("");
+        tooltip.append("h3").text(idLookup[d].name);
+
+      // Sets up text inside the tooltip
+        d3.keys(datum).forEach(function(metric) {
+          if (datum[metric][year]) {
+            var div = tooltip.append("div");
+            div.append("span").text(metric_lookup[metric].name + ": ");
+            div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
+            div.append("span").text(" " + metric_lookup[metric].units);
+          }
+        });
+
+      
+        svg.selectAll(".bubble")
+          .filter(function(p) {
+            return country == p;
+          })
+          .raise();
+        svg.selectAll(".bubble circle")
+          .style("stroke", function(p) {
+            return country == p ? "#111" : null;
+          })
+          .style("stroke-width", function(p) {
+            return country == p ? "2px" : null;
+          });
+
+
+        updateDataValues();
+      })
+      .on("mousemove", function(d) {
+        return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
+      })
+      .on("mouseout", function() {
+        selected_country = "WLD";
+        d3.selectAll(".country-label").text("Global");
+        map_svg.selectAll("path.country")
+          .style("opacity", 1)
+          .style("stroke", null);
+        svg.selectAll(".bubble circle")
+          .style("stroke", function(p) {
+            return null;
+          })
+          .style("stroke-width", function(p) {
+            return null;
+          });
+
+        d3.selectAll("path.spark")
+          .attr("d", "");
+
+        tooltip.style("display", "none");
+
+        updateDataValues();
+      })
+
+  
+
+
 
 // Set scale for sizing dots
 var radius = d3.scaleSqrt()
@@ -793,6 +902,8 @@ d3.queue()
    
     var countries = d3.keys(lookup);
 
+
+// Creates x-axis, y-axis
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
       .attr("class", "x axis")
@@ -827,127 +938,23 @@ d3.queue()
       .attr("y2", yscale(0))
 
   
-  
-  
-  
-    var group = svg.selectAll("g.bubble")
-      .data(countries.filter(function(d) {
-        return d && exclude.indexOf(d) == -1;
-      }))
-      .enter().append("g")
-      .sort(function(a,b) {
-        return +lookup[b]["abs_carbon"][year].replace(",","") - (+lookup[a]["abs_carbon"][year].replace(",",""));
-      })
-      .attr("class", "bubble")
-      .attr("transform", function(d) {
-        return "translate(" + xscale(+lookup[d][active_metric][year]) + "," + yscale(+lookup[d][active_ymetric][year]) + ")"
-      });
-
-    group
-      .append("circle")
-      .attr("r", function(d) {
-        return radius(+lookup[d]["abs_carbon"][year].replace(",",""));
-      })
-      .style("fill", function(d) {
-        return "#777";
-      })
-      .on("click", function(d) {
-        console.log(d);
-      })
-      .on("mouseover", function(d) {
-        var country = d;
-        if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
-        if (!(country in lookup)) { return "#eaeaea"; }
-        selected_country = country;
-        var datum = lookup[country];
-
-        d3.selectAll(".country-label").text(idLookup[d].name);
-
-        map_svg.selectAll("path.country")
-          .style("opacity", function(p) {
-            return p.id == String(+idLookup[d]["country-code"]) ? 1 : 0.3;
-          })
-          .style("stroke", function(p) {
-            return p.id == String(+idLookup[d]["country-code"]) ? "#222" : null;
-          });
-
-        tooltip.style("display", null).html("");
-        tooltip.append("h3").text(idLookup[d].name);
-      
-      
-      
-      //
-      // Sets up text inside the tooltip
-      //
-      
-        d3.keys(datum).forEach(function(metric) {
-          if (datum[metric][year]) {
-            var div = tooltip.append("div");
-            div.append("span").text(metric_lookup[metric].name + ": ");
-            div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
-            div.append("span").text(" " + metric_lookup[metric].units);
-          }
-        });
-
-      
-      
-      
-      
-      
-        svg.selectAll(".bubble")
-          .filter(function(p) {
-            return country == p;
-          })
-          .raise();
-        svg.selectAll(".bubble circle")
-          .style("stroke", function(p) {
-            return country == p ? "#111" : null;
-          })
-          .style("stroke-width", function(p) {
-            return country == p ? "2px" : null;
-          });
-
-
-        updateDataValues();
-      })
-      .on("mousemove", function(d) {
-        return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
-      })
-      .on("mouseout", function() {
-        selected_country = "WLD";
-        d3.selectAll(".country-label").text("Global");
-        map_svg.selectAll("path.country")
-          .style("opacity", 1)
-          .style("stroke", null);
-        svg.selectAll(".bubble circle")
-          .style("stroke", function(p) {
-            return null;
-          })
-          .style("stroke-width", function(p) {
-            return null;
-          });
-
-        d3.selectAll("path.spark")
-          .attr("d", "");
-
-        tooltip.style("display", "none");
-
-        updateDataValues();
-      })
-
-  
-  
-  
+  // Create label for active y-metric
     svg.append("text")
       .attr("x", 6)
       .attr("y", -5)
       .attr("class", "label active-ymetric-label")
       .text(metric_lookup[active_ymetric].name + " (" + metric_lookup[active_ymetric].units+ ")");
 
-  
-  
-  
-  
+  // Create label for active x-metric
+    svg.append("text")
+      .attr("x", width-2)
+      .attr("y", height-6)
+      .attr("text-anchor", "end")
+      .attr("class", "label active-metric-label")
+      .text(metric_lookup[active_metric].name + " (" + metric_lookup[active_ymetric].units+ ")");
+
+
+  // Create label for current year
     var year_label = svg.append("text")
       .attr("x", width-2)
       .attr("y", -5)
@@ -956,13 +963,6 @@ d3.queue()
       .style("font-weight", "bold")
       .style("font-size", "36px")
       .text("1999-2000");
-
-    svg.append("text")
-      .attr("x", width-2)
-      .attr("y", height-6)
-      .attr("text-anchor", "end")
-      .attr("class", "label active-metric-label")
-      .text(metric_lookup[active_metric].name + " (" + metric_lookup[active_ymetric].units+ ")");
 
   
   
