@@ -303,23 +303,13 @@ map_svg.append("path")
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 //
 // Create scatterplot
 //
 
 // Create bubbles, sort them according to which has more abs_carbon
-// 
+
+    var countries = d3.keys(lookup);
 
     var group = svg.selectAll("g.bubble")
       .data(countries.filter(function(d) {
@@ -895,7 +885,7 @@ d3.queue()
   
   
    
-    var countries = d3.keys(lookup);
+
 
 
 // Creates x-axis, y-axis
