@@ -1,6 +1,3 @@
-
-<script>
-
 // Global variables
 
 var year = 2000;
@@ -941,4 +938,3 @@ d3.queue()
     }
 
   });
-</script>
