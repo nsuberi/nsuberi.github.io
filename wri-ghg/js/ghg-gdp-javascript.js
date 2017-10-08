@@ -32,8 +32,11 @@ d3.select("body")
   .append("h3")
   .attr("class", "country-label")
   .text(function(d) { return "Global"; });
+
 // Background svg??
 // Not sure what this does
+// Originally lines 310-315
+
 var svg = d3.select("body")
   .append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -54,12 +57,6 @@ var map_container = d3.select("body")
     .style("position", "relative")
     .style("display", "inline-block");
 
-// append SVG inside the map_container, set to same width of the containing div
-var map_svg = map_container
-  .append("svg")
-    .attr("width", map_width)
-    .attr("height", map_height);
-
 // add link to the scatterplot (2-axis to 1-axis transition)
 map_container.append("a")
   .text("Colored by Territorial ICGGD Value")
@@ -69,7 +66,7 @@ map_container.append("a")
   .style("left", (map_width/2-40) + "px")
 
 
-
+// Set map projection, graticule
 var projection = d3.geoTimes()
     .scale((map_width - 4) / (1.5 * Math.PI))
     .translate([map_width / 2, map_height / 2])
@@ -78,6 +75,7 @@ var projection = d3.geoTimes()
 var path = d3.geoPath()
     .projection(projection);
 
+// graticule is a grid that shows lat/lon grid over Earth
 var graticule = d3.geoGraticule();
 
 var isoLookup = {};
@@ -85,6 +83,14 @@ var idLookup = {};
 
 
 
+// append SVG inside the map_container, set to same width of the containing div
+var map_svg = map_container
+  .append("svg")
+    .attr("width", map_width)
+    .attr("height", map_height);
+
+
+// what are these, defs, use-stroke, use-fill, path
 map_svg.append("defs").append("path")
     .datum(graticule.outline())
     .attr("id", "sphere")
@@ -103,144 +109,201 @@ map_svg.append("path")
     .attr("class", "graticule")
     .attr("d", path);
 
-
-
-
-
-
-
     //
     // Set up map geojson
     //
   
+    // import data
     d3.json("../data/world-50m.json", function(error, world) {
       if (error) throw error;
 
-      map_svg.selectAll("path.country")
-          .data(topojson.feature(world, world.objects.countries).features)
-        .enter().append("path")
-          .attr("class", "country")
-          .attr("d", path);
+    // draw country boundaries
+    map_svg.selectAll("path.country")
+        .data(topojson.feature(world, world.objects.countries).features)
+      .enter().append("path")
+        .attr("class", "country")
+        .attr("d", path);
 
-      map_svg.insert("path", ".graticule")
-          .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
-          .attr("class", "boundary")
-          .attr("d", path);
+    map_svg.insert("path", ".graticule")
+        .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+        .attr("class", "boundary")
+        .attr("d", path);
 
       
-      // Lookup table for iso-codes from map is
       
-      d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
-        isoCodes.forEach(function(d) {
-          isoLookup[String(+d["country-code"])] = d;
-        });
-        isoCodes.forEach(function(d) {
-          idLookup[d["alpha-3"]] = d;
-        });
+      
+    // Lookup table for iso-codes from map is
 
-        group
-          .append("text")
-          .attr("y", -20)
-          .attr("text-anchor", "middle")
-          .style("font-weight", "bold")
-          .text(function(d) {
-            return d in idLookup ? idLookup[d].name : "";
-          })
-          .style("display", "none");
+    d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
 
-        map_svg.selectAll("path.country")
-          .style("fill", function(d) {
-            if (!(d.id in isoLookup)) { return "#eaeaea"; }
-            var country = isoLookup[d.id]["alpha-3"];
-            if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
-            if (!(country in lookup)) { return "#eaeaea"; }
-            var datum = lookup[country];
-            //console.log(datum);
-            if (datum[active_ymetric][year] == "") { return "#eaeaea" };
-            return colorMap(+datum["index_territorial"][year]) || "#eaeaea";
-          })
-          .on("mouseover", function(d) {
-            if (!(d.id in isoLookup)) { return "#eaeaea"; }
-            var country = isoLookup[d.id]["alpha-3"];
-            if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
-            if (!(country in lookup)) { return "#eaeaea"; }
-            selected_country = country;
-            var datum = lookup[country];
-
-            d3.selectAll(".country-label").text(isoLookup[d.id].name);
-            tooltip.style("display", null).html("");
-            tooltip.append("h3").text(isoLookup[d.id].name);
-            d3.keys(datum).forEach(function(metric) {
-              if (datum[metric][year]) {
-                var div = tooltip.append("div");
-                div.append("span").text(metric_lookup[metric].name + ": ");
-                div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
-                div.append("span").text(" " + metric_lookup[metric].units);
-              }
-            });
-
-            map_svg.selectAll("path.country")
-              .style("opacity", function(p) {
-                return p.id == d.id ? 1 : 0.3;
-              })
-              .style("stroke", function(p) {
-                return p.id == d.id ? "#222" : null;
-              });
-
-            var selected_bubble = svg.selectAll(".bubble")
-              .filter(function(p) {
-                return country == p;
-              })
-              .raise();
-
-            selected_bubble.select("circle")
-              .style("stroke", "#111")
-              .style("stroke-width", "2px");
-
-            selected_bubble.select("text")
-              .style("display", null);
-
-            multiples.each(function(metric) {
-              var series = [];
-              d3.range(2000,2016).forEach(function(year) {
-                series.push({
-                  year: +year,
-                  value: +datum[metric][year]
-                })
-              });
-              d3.select(this)
-                .select("path.spark")
-                .attr("d", metric_lookup[metric].line(series))
-            });
-
-            updateDataValues();
-          })
-          .on("mousemove", function(d) {
-            return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
-          })
-          .on("mouseout", function() {
-            selected_country = "WLD";
-            d3.selectAll(".country-label").text("Global");
-            map_svg.selectAll("path.country")
-              .style("opacity", 1)
-              .style("stroke", null);
-
-            svg.selectAll(".bubble circle")
-              .style("stroke", null)
-              .style("stroke-width", null);
-
-            svg.selectAll(".bubble text")
-              .style("display", "none");
-
-            d3.selectAll("path.spark")
-              .attr("d", "");
-
-            tooltip.style("display", "none");
-
-            updateDataValues();
-          });
+      isoCodes.forEach(function(d) {
+        isoLookup[String(+d["country-code"])] = d;
       });
+      isoCodes.forEach(function(d) {
+        idLookup[d["alpha-3"]] = d;
+      });
+
+      group
+        .append("text")
+        .attr("y", -20)
+        .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .text(function(d) {
+          return d in idLookup ? idLookup[d].name : "";
+        })
+        .style("display", "none");
+
+      
+      
+      map_svg.selectAll("path.country")
+      
+      // set fill color for country
+        .style("fill", function(d) {
+        
+        // if country not in isoLookup, return gray
+          if (!(d.id in isoLookup)) { return "#eaeaea"; }
+        // grab iso3 code
+        // if in set to exclude, return gray
+        // if not in data lookup table, return gray
+          var country = isoLookup[d.id]["alpha-3"];
+          if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
+          if (!(country in lookup)) { return "#eaeaea"; }
+        
+        // grab data for that country
+          var datum = lookup[country];
+          //console.log(datum);
+        
+        // if missing data for a given year for that country / metric, return gray
+          if (datum[active_ymetric][year] == "") { return "#eaeaea" };
+        // if data exists, color it
+        
+        //
+        // change to color by another variable here
+        //
+          var color_var = "index_territorial"
+          return color(+datum[color_var][year]) || "#eaeaea";
+        })
+      
+      // set mouseover function for country
+        .on("mouseover", function(d) {
+        
+        // if not in isoLookup, return gray
+          if (!(d.id in isoLookup)) { return "#eaeaea"; }
+        
+        // grab iso3 code
+        // if in set to exclude, return gray
+        // if not in data lookup table, return gray
+          var country = isoLookup[d.id]["alpha-3"];
+          if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
+          if (!(country in lookup)) { return "#eaeaea"; }
+        
+        // set global variable selected_country
+          selected_country = country;
+        
+        // grab data for that country
+          var datum = lookup[country];
+
+        // update country, label, tooltip
+          d3.selectAll(".country-label").text(isoLookup[d.id].name);
+          tooltip.style("display", null).html("");
+          tooltip.append("h3").text(isoLookup[d.id].name);
+        // loop over all data and print inside the tooltip
+          d3.keys(datum).forEach(function(metric) {
+            if (datum[metric][year]) {
+              var div = tooltip.append("div");
+              div.append("span").text(metric_lookup[metric].name + ": ");
+              div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
+              div.append("span").text(" " + metric_lookup[metric].units);
+            }
+          });
+           
+        // Update visualization for countries. Gray out borders for all un-selected countries
+        // Q *** does the 0.3 do anything in the first call, if stroke gets set to null in second part?
+          map_svg.selectAll("path.country")
+            .style("opacity", function(p) {
+              return p.id == d.id ? 1 : 0.3;
+            })
+            .style("stroke", function(p) {
+              return p.id == d.id ? "#222" : null;
+            });
+
+        // Select bubble in scatter plot
+        // how does .raise() work? Brings to top, eh? 
+        // where is this defined/
+        // need to reset bubble ordering on mouseout
+          var selected_bubble = svg.selectAll(".bubble")
+            .filter(function(p) {
+              return country == p;
+            })
+            .raise();
+
+         // stroke becomes bold and wider
+          selected_bubble.select("circle")
+            .style("stroke", "#111")
+            .style("stroke-width", "2px");
+
+        // should make country name show... confused with the null value here
+          selected_bubble.select("text")
+            .style("display", null);
+
+        // loop over all of the wb indicators
+        // for each year in the range 2000 - 2016 (with 2016 a proxy for the summary ranges):
+          multiples.each(function(metric) {
+            var series = [];
+            d3.range(2000,2016).forEach(function(year) {
+              series.push({
+                year: +year,
+                value: +datum[metric][year]
+              })
+            });
+            d3.select(this)
+              .select("path.spark")
+              .attr("d", metric_lookup[metric].line(series))
+          });
+
+          updateDataValues();
+        })
+      
+      // Causes the tool tip to track the mouse movement
+        .on("mousemove", function(d) {
+          return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
+        })
+      
+      // Reset map to have all countries showing
+        .on("mouseout", function() {
+        
+        // update global variable back to "WLD"
+          selected_country = "WLD";
+        
+        // .country-label is the text over the wb_data windows
+          d3.selectAll(".country-label").text("Global");
+        
+        // reset opacity on map rendering of country boundaries
+          map_svg.selectAll("path.country")
+            .style("opacity", 1)
+            .style("stroke", null);
+
+        // set the borders of all circles to be null, not show their text
+          svg.selectAll(".bubble circle")
+            .style("stroke", null)
+            .style("stroke-width", null);
+
+          svg.selectAll(".bubble text")
+            .style("display", "none");
+
+        // unclear what this does
+        // Q *** ???
+          d3.selectAll("path.spark")
+            .attr("d", "");
+
+        // hide the tooltip
+          tooltip.style("display", "none");
+
+        // update shown data
+          updateDataValues();
+        });
     });
+  });
 
 
 
