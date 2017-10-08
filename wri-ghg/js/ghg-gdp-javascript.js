@@ -309,8 +309,8 @@ map_svg.append("path")
         // update shown data
           updateDataValues();
         });
-    });
-  });
+    };
+  };
 
 
 
