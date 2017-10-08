@@ -1,0 +1,119 @@
+<style type="text/css">
+body {
+  margin: 20px;
+  font-family: acumin-pro-condensed, arial, sans;
+  line-height: 1.3em;
+  width: 1180px;
+}
+
+h3 {
+  margin: 0 0 4px 4px;
+  line-height: 1.05em;
+}
+
+.label {
+  font-size: 18px;
+}
+
+.legend{
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.axis text {
+  font-size: 14px;
+  fill: #333;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke-width:1px;
+  stroke: #e7e7e7;
+}
+
+circle {
+  stroke: #fff;
+  stroke-width: 1px;
+  opacity: 0.8;
+}
+
+.bubble {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+path.country {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.stroke {
+  fill: none;
+  stroke: #bbb;
+  stroke-width: 2px;
+}
+
+.fill {
+  fill: #fff;
+}
+
+.graticule {
+  fill: none;
+  stroke: #777;
+  stroke-width: 0.5px;
+  stroke-opacity: 0.5;
+}
+
+.land {
+  fill: #ddd;
+}
+
+.boundary {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 0.5px;
+}
+#tooltip {
+  width: 480px;
+  padding: 6px 12px;
+}
+#tooltip h3 {
+  margin: 0 0 12px 0;
+}
+
+.multiple {
+  width: 180px;
+  height: 120px;
+  float: left;
+  position: relative;
+  background: #fcfcfc;
+  border: 1px solid #d0d0d0;
+  margin: 4px;
+  cursor: pointer;
+}
+
+.multiple h3 {
+  position: relative;
+  font-size: 16px;
+  width: 180px;
+  z-index: 5;
+  margin: 1px 0 0 5px;
+}
+
+.multiple svg {
+  position: absolute;
+  top: 40px;
+  z-index: 4;
+}
+
+.multiple path.spark {
+  stroke-width: 2px;
+  stroke: #7D0063;
+  fill: none;
+}
+
+#year-slider {
+  margin: 0 0px 0 0;
+}
+</style>
