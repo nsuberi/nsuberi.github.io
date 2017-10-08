@@ -30,13 +30,6 @@ var lookup = {};
 var exclude = ["AFG", "COD", "LBY", "LCA", "LIE", "LSO", "MCO", "MDA", "NRU", "PRK", "ROU", "SMR", "SOM", "SSD", "SYR", "TLS", "TUV", "WLD"];
 
 
-
-
-
-//
-// Initialize map components
-//
-
 //
 // Permanent components
 //
@@ -60,6 +53,7 @@ var svg = d3.select("body")
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
 
 
 
@@ -144,7 +138,7 @@ map_svg.append("path")
         .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
         .attr("class", "boundary")
         .attr("d", path);
-    }
+    })
       
     // Create look-up table with iso3 codes to match map IDs
     d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
@@ -156,7 +150,7 @@ map_svg.append("path")
         idLookup[d["alpha-3"]] = d;
       });
 
-    }
+    })
 
 
       group
