@@ -113,7 +113,7 @@ map_svg.append("path")
     // Set up map geojson
     //
   
-    // import data
+    // import data, draw lines
     d3.json("../data/world-50m.json", function(error, world) {
       if (error) throw error;
 
@@ -128,12 +128,9 @@ map_svg.append("path")
         .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
         .attr("class", "boundary")
         .attr("d", path);
-
+    }
       
-      
-      
-    // Lookup table for iso-codes from map is
-
+    // Create look-up table with iso3 codes to match map IDs
     d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
 
       isoCodes.forEach(function(d) {
@@ -142,6 +139,9 @@ map_svg.append("path")
       isoCodes.forEach(function(d) {
         idLookup[d["alpha-3"]] = d;
       });
+
+    }
+
 
       group
         .append("text")
@@ -323,16 +323,22 @@ map_svg.append("path")
 // Create scatterplot
 //
 
+// Set scale for sizing dots
 var radius = d3.scaleSqrt()
   .range([2.5,20])
   .domain([0, 3000]);
 
 // Set the domain to be reasonable for both map and scatter
+// Q *** perhaps this should update as the variable used for the color ramp changes?
 var color = d3.scaleThreshold()
   .domain([-0.05, 0, 0.5, 0.75, 1])
   .range(["#d73027","#f46d43","#fdae61","#abd9e9","#74add1","#4575b4"]);
 
+
+
 // Set up scales
+
+// why are domains of the scales set to -0.5 to 0.5?
 var xscale = d3.scaleLinear()
   .domain([-0.5,0.5])
   .range([0,width])
