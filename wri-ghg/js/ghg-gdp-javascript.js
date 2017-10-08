@@ -2,10 +2,7 @@
 // Global variables
 //
 
-var year = 2000;
-var active_metric = "CO2";
-var active_ymetric = "GDP";
-
+// Sets up page layout
 var margin = { top: 50, right: 20, bottom: 50, left: 50 };
 var width = 530 - margin.left - margin.right;
 var height = 560 - margin.top - margin.bottom;
@@ -13,9 +10,28 @@ var height = 560 - margin.top - margin.bottom;
 var map_width = 620;
 var map_height = 560;
   
+// If true, will cycle through data
 var playing = true;
 
+// Currently displayed data
+var year = 2000;
 var selected_country = "WLD";
+var active_metric = "CO2";
+var active_ymetric = "GDP";
+
+// Dictionaries for matching data w/ map
+var isoLookup = {};
+var idLookup = {};
+
+// This is the variable that all data will be stored into
+var lookup = {};
+
+// Excluded countries, for one reason or another
+var exclude = ["AFG", "COD", "LBY", "LCA", "LIE", "LSO", "MCO", "MDA", "NRU", "PRK", "ROU", "SMR", "SOM", "SSD", "SYR", "TLS", "TUV", "WLD"];
+
+
+
+
 
 //
 // Initialize map components
@@ -27,7 +43,8 @@ var selected_country = "WLD";
 
 // Tooltip, will appear for any mouseover events on the scatter or map
 var tooltip = d3.select("#tooltip");
-// Country label
+
+// Country label for over the wb_data indicator plumb-lines
 d3.select("body")
   .append("h3")
   .attr("class", "country-label")
@@ -78,8 +95,7 @@ var path = d3.geoPath()
 // graticule is a grid that shows lat/lon grid over Earth
 var graticule = d3.geoGraticule();
 
-var isoLookup = {};
-var idLookup = {};
+
 
 
 
@@ -432,17 +448,23 @@ multiples.select("svg")
   .style("font-size", "12px")
   .text(2000)
 
-
-
-
-
-
-//
-// Excluded countries - decide which to keep
-//
-
-var exclude = ["AFG", "COD", "LBY", "LCA", "LIE", "LSO", "MCO", "MDA", "NRU", "PRK", "ROU", "SMR", "SOM", "SSD", "SYR", "TLS", "TUV", "WLD"];
-
+  
+  
+    d3.selectAll(".multiple")
+      .on("click", function(metric) {
+        // 2000-2014 for consumption_co2 only
+        active_metric = metric;
+        if (String(year).indexOf("-") > -1) {
+          if (metric == "consumption_co2") {
+            year = "2000-2014";
+          } else {
+            year = "2000-2015";
+          }
+        }
+        setYear(year);
+        updateXMetric(metric);
+        updateBubbles();
+      });
 
 
 
@@ -657,8 +679,7 @@ function format_abbrev(x) {
 // Load data
 //
 
-// This is the variable that all data will be stored into
-var lookup = {};
+
 
 d3.queue()
   .defer(d3.csv, "../final-data/GDP\ annual\ change\ 2000-15\ 9.28.17.csv")
@@ -957,7 +978,14 @@ d3.queue()
   
   
   
+  //
+  // Functions used for updating visual
+  //
 
+  // nextYear() -> used recursively for autoplay
+  // updateXMetric(metric) -> change x-axis of scatter
+  // updateYMetric(metric) -> change y-axis of scatter
+  // setYear(year) -> used to setYear to a specific choice
  
     // autoplay
     function nextYear() {
@@ -1010,36 +1038,6 @@ d3.queue()
         setYear(year);
       });
 
-  
-  
-  
-  
-  
-  
-  
-    d3.selectAll(".multiple")
-      .on("click", function(metric) {
-        // 2000-2014 for consumption_co2 only
-        active_metric = metric;
-        if (String(year).indexOf("-") > -1) {
-          if (metric == "consumption_co2") {
-            year = "2000-2014";
-          } else {
-            year = "2000-2015";
-          }
-        }
-        setYear(year);
-        updateXMetric(metric);
-        updateBubbles();
-      });
-
-  
-  
-  
-  
-  //
-  // Update xMetric and yMetric 
-  //
   
     function updateXMetric(metric) {
       d3.selectAll(".active-metric-label").text(metric_lookup[metric].name);
@@ -1158,11 +1156,14 @@ d3.queue()
   
   
   
-  
+  // both_exist refers to previous timestep and following time step's data
+  //
     function updateBubbles() {
       svg.selectAll("g.bubble")
         .transition()
         .duration(700)
+      // set destination opacity depending on whether the point should stay displayed
+      // in the new time step
         .style("opacity", function(d) {
           var both_exist = true;
           if (active_metric in lookup[d] && year in lookup[d][active_metric]) {
@@ -1183,6 +1184,10 @@ d3.queue()
           }
           return both_exist ? 0.8 : 0;
         })
+      // check to see if xvalue exists in the data
+      // assume that the y_value does exist...
+      // would have to update this to look more like the xscale lookup if we allow 
+      // any variable on the y-axis
         .attr("transform", function(d) {
           if (active_metric in lookup[d] && year in lookup[d][active_metric]) {
             var value = lookup[d][active_metric][year];
@@ -1193,6 +1198,8 @@ d3.queue()
           return "translate(" + x + "," + yscale(+lookup[d][active_ymetric][year]) + ")"
         });
 
+      // change radius
+      // change color of fill
       svg.selectAll("g.bubble circle")
         .transition()
         .duration(700)
@@ -1205,6 +1212,8 @@ d3.queue()
           if (lookup[d][active_ymetric][year] == "") { return "#eaeaea" };
           return color(+lookup[d][active_ymetric][year]) || "#eaeaea";
         })
+      
+      // change color of map
       map_svg.selectAll("path.country")
         .transition(700)
         .style("fill", function(d) {
@@ -1214,7 +1223,9 @@ d3.queue()
           if (!(country in lookup)) { return "#eaeaea"; }
           var datum = lookup[country];
           if (datum[active_ymetric][year] == "") { return "#eaeaea" };
-          return colorMap(+datum["index_territorial"][year]) || "#eaeaea";
+        
+        
+          return color(+datum["index_territorial"][year]) || "#eaeaea";
         })
     }
 
