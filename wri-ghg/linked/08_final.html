@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test2--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -135,10 +135,12 @@ path.country {
 
 <script>
 
+var playing = true;
 var year = 2000;
 var active_metric = "CO2";
 var active_ymetric = "GDP";
 var clicked_country = null;
+var selected_country = "WLD";
 
 var exclude = ["AFG", "COD", "LBY", "LCA", "LIE", "LSO", "MCO", "MDA", "NRU", "PRK", "ROU", "SMR", "SOM", "SSD", "SYR", "TLS", "TUV", "WLD"];
 
@@ -416,8 +418,6 @@ var graticule = d3.geoGraticule();
 
 //var isoLookup = {};
 var idLookup = {};
-
-var selected_country = "WLD";
 
 map_svg.append("defs").append("path")
     .datum(graticule.outline())
@@ -745,7 +745,7 @@ d3.queue()
     // stamen's: world-50m.json
     // wri's: wri-bounds-topo.json
     // wri's: all_primary_countries.json
-    d3.json("../data/all_primary_countries.json", function(error, world) {
+    d3.json("../data/all_primary_countries.json", function(error, world){
       if (error) throw error;
 
       // Experimental logs
@@ -872,12 +872,50 @@ d3.queue()
 
           });
       });
+
+
+    // Set year and cue playforward
+    setYear(2000);
+    setTimeout(nextYear, 1100);
+
+    // Define slider behavior
+    // *QQ* May have to move this up
+    d3.select("#year-slider")
+      .on("input", function() {
+        playing = false;
+        year = this.value;
+        if (year == 2016) {
+          if (active_metric == "consumption_co2") {
+            year = "2000-2014";
+          } else {
+            year = "2000-2015";
+          }
+        }
+        setYear(year);
+      });
+
+    // define click-on-wb-indicator behavior
+    d3.selectAll(".multiple")
+      .on("click", function(metric) {
+        // 2000-2014 for consumption_co2 only
+        active_metric = metric;
+        if (String(year).indexOf("-") > -1) {
+          if (metric == "consumption_co2") {
+            year = "2000-2014";
+          } else {
+            year = "2000-2015";
+          }
+        }
+        setYear(year);
+        updateXMetric(metric);
+        updateBubbles();
+      });
+
+// end of await function
     });
 
+// HELPER FUNCTIONS
 
-    var playing = true;
-    
-    // autoplay
     function nextYear() {
       if (!playing) return;
 
@@ -901,39 +939,6 @@ d3.queue()
 
       setTimeout(nextYear, 1100);
     };
-
-    setYear(2000);
-    setTimeout(nextYear, 1100);
-
-    d3.select("#year-slider")
-      .on("input", function() {
-        playing = false;
-        year = this.value;
-        if (year == 2016) {
-          if (active_metric == "consumption_co2") {
-            year = "2000-2014";
-          } else {
-            year = "2000-2015";
-          }
-        }
-        setYear(year);
-      });
-
-    d3.selectAll(".multiple")
-      .on("click", function(metric) {
-        // 2000-2014 for consumption_co2 only
-        active_metric = metric;
-        if (String(year).indexOf("-") > -1) {
-          if (metric == "consumption_co2") {
-            year = "2000-2014";
-          } else {
-            year = "2000-2015";
-          }
-        }
-        setYear(year);
-        updateXMetric(metric);
-        updateBubbles();
-      });
 
     function updateXMetric(metric) {
       d3.selectAll(".active-metric-label").text(metric_lookup[metric].name);
@@ -993,6 +998,8 @@ d3.queue()
         .attr("y2", yscale(0))
     };
 
+
+
     function setYear(year) {
       var single_year = true;
       if (String(year).indexOf("-") > -1) {
@@ -1046,6 +1053,7 @@ d3.queue()
 
     }
 
+    // Creates transitions for dot location & color, map color
     function updateBubbles() {
       svg.selectAll("g.bubble")
         .transition()
@@ -1108,25 +1116,6 @@ d3.queue()
           return colorMap(+datum["index_territorial"][year]) || "#eaeaea";
         })
     }
-
-    /*
-    function updateDataValues() {
-      var datum = lookup[selected_country];
-      //tooltip.selectAll("div").remove();
-
-      //d3.selectAll(".multiple-value").text("");
-
-      Potentially redundant?
-      d3.keys(datum).forEach(function(metric) {
-        if (datum[metric][year]) {
-          var div = tooltip.append("div");
-          div.append("span").text(metric_lookup[metric].name + ": ");
-          div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
-          div.append("span").text(" " + metric_lookup[metric].units);
-          d3.select(".multiple-value-" + metric).text(metric_lookup[metric].format(+datum[metric][year]) + " " + metric_lookup[metric].units)
-        }
-      });
-    }*/
 
     function update_to_selected_region(region_name, show_scatter_name) {
 
