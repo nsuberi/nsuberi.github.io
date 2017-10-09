@@ -639,7 +639,10 @@ d3.queue()
       .on("click", function(d) {
         clicked_country = d
         console.log(d); 
-        update_to_selected_region(clicked_country)
+
+        // Need to reset to global, then select anew
+        reset_to_global();
+        update_to_selected_region(clicked_country);
 
         // TO DO 
         // expand this function to set chosen_country
@@ -821,6 +824,9 @@ d3.queue()
           })
           .on("click", function(d){
             clicked_country = d;
+
+            // need to reset to clear styles, then select anew
+            reset_to_global();
             update_to_selected_region(clicked_country)
 
           })
@@ -1121,7 +1127,7 @@ d3.queue()
       });
     }
 
-    function update_to_selected_region(region_name) {
+    function update_to_selected_region(region_name, mouse_on_map) {
         // *QQ* The following code should only run if there was no active clicked_country
         selected_country = region_name;
         console.log("Update to selected region")
@@ -1188,9 +1194,13 @@ d3.queue()
             selected_bubble.select("circle")
               .style("stroke", "#111")
               .style("stroke-width", "2px");
-
-            selected_bubble.select("text")
-              .style("display", null);
+            
+            // only put label over the scatter dot if map country is selected
+            if(mouse_on_map){
+                selected_bubble.select("text")
+                  .style("display", null);
+              }
+            
 
         // update wb indicators
         multiples.each(function(metric) {
