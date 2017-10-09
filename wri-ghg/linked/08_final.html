@@ -878,6 +878,7 @@ d3.queue()
     setYear(2000);
     setTimeout(nextYear, 1100);
     console.log("set year and cued nextYear")
+    // End map load logic
     });
 
     // Define slider behavior
@@ -918,6 +919,7 @@ d3.queue()
 // HELPER FUNCTIONS
 
     function nextYear() {
+      console.log("triggering nextYear")
       if (!playing) return;
 
       year++;
