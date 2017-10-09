@@ -414,7 +414,7 @@ var path = d3.geoPath()
 
 var graticule = d3.geoGraticule();
 
-var isoLookup = {};
+//var isoLookup = {};
 var idLookup = {};
 
 var selected_country = "WLD";
@@ -766,9 +766,11 @@ d3.queue()
         // investigate how this works as a key between the map and the wb data
 
         // Are these two redundant?
-        isoCodes.forEach(function(d) {
-          isoLookup[String(+d["country-code"])] = d;
-        });
+        
+        //isoCodes.forEach(function(d) {
+        //  isoLookup[String(+d["country-code"])] = d;
+        //});
+        
         isoCodes.forEach(function(d) {
           idLookup[d["alpha-3"]] = d;
         });
@@ -796,9 +798,9 @@ d3.queue()
 
 
             console.log(d)
-            console.log(d.id)
+            console.log(d.properties.iso_a3)
 
-            if (!(d.id in isoLookup)) { return "#eaeaea"; }
+            //if (!(d.id in isoLookup)) { return "#eaeaea"; }
 
             //var country = isoLookup[d.id]["alpha-3"];
             var country = d.properties.iso_a3
