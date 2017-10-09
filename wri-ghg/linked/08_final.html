@@ -837,6 +837,7 @@ d3.queue()
           })
           .on("mouseover", function(d) {
 
+            var country = d.properties.iso_a3
             // Attempt to shortcircuit code below if there is an active clicked_country
             if (clicked_country) { 
 
@@ -845,8 +846,6 @@ d3.queue()
               }
               return clicked_country; 
             } else {
-
-              var country = d.properties.iso_a3
 
               //if (!(d.id in isoLookup)) { return "#eaeaea"; }
               //var country = isoLookup[d.id]["alpha-3"];
