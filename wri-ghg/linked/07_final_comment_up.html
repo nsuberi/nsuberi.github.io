@@ -139,7 +139,7 @@ path.country {
 var year = 2000;
 var active_metric = "CO2";
 var active_ymetric = "GDP";
-var chosen_country = null;
+var clicked_country = null;
 
 var exclude = ["AFG", "COD", "LBY", "LCA", "LIE", "LSO", "MCO", "MDA", "NRU", "PRK", "ROU", "SMR", "SOM", "SSD", "SYR", "TLS", "TUV", "WLD"];
 
@@ -661,7 +661,11 @@ d3.queue()
 
         // Adding this as an attempt to shortcircuit mouseover behaviir
         // if there is an active clicked_country
-        if (clicked_country) {return clicked_country}
+
+        // TO DO
+        // this is causing problems, isolate where the problem occurs by splitting to two lines:
+        if (clicked_country) {
+          return clicked_country}
 
         // *QQ* The following code should only run if there was no active clicked_country
         selected_country = country;
@@ -800,13 +804,14 @@ d3.queue()
     // *QQ* Convert wri-bounds to topojson? 
     // Does make them smaller, then don't have to chage the add code :)
 
-    d3.json("../data/all_primary_countries.json", function(error, world) {
+    d3.json("../data/wri-bounds-topo.json", function(error, world) {
       if (error) throw error;
 
       // Experimental logs
       console.log(world)
       console.log(world.objects)
       console.log(world.objects.countries)
+      console.log(topojson.feature(world, world.objects.countries).features)
 
       map_svg.selectAll("path.country")
         .data(topojson.feature(world, world.objects.countries).features)
