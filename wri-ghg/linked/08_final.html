@@ -695,6 +695,7 @@ d3.queue()
 
         // Attempt to short-circuit if there is an active clicked_country
         if (clicked_country) { 
+          kill_tooltip();
           return clicked_country; 
         } else {
           reset_to_global()
@@ -854,6 +855,7 @@ d3.queue()
 
             // Attempt to shortcircuit code below if there is an active clicked_country
             if (clicked_country) { 
+              kill_tooltip();
               return clicked_country; 
             } else {
               reset_to_global();
@@ -1100,6 +1102,8 @@ d3.queue()
       tooltip.selectAll("div").remove();
 
       d3.selectAll(".multiple-value").text("");
+
+      /* Potentially redundant?
       d3.keys(datum).forEach(function(metric) {
         if (datum[metric][year]) {
           var div = tooltip.append("div");
@@ -1109,6 +1113,7 @@ d3.queue()
           d3.select(".multiple-value-" + metric).text(metric_lookup[metric].format(+datum[metric][year]) + " " + metric_lookup[metric].units)
         }
       });
+      */
 
       multiples.each(function(metric) {
         if (metric in datum) {
@@ -1249,6 +1254,11 @@ function reset_to_global(){
 
             // uses the global selected_country variable to update
             updateDataValues();
+}
+
+function kill_tooltip(){
+    // hides the tooltip
+    tooltip.style("display", "none");
 }
 
 // End of actions following data import
