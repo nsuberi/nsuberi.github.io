@@ -1129,16 +1129,19 @@ d3.queue()
     }*/
 
     function update_to_selected_region(region_name, show_scatter_name) {
-        // *QQ* The following code should only run if there was no active clicked_country
-        selected_country = region_name;
-        console.log("Selected region:")
-        console.log(selected_country)
-        console.log("Country info:")
 
+        
         update_map();
+        console.log("Updated map")
+
         update_circles(show_scatter_name);
+        console.log("Updated circles")
+
         update_tooltip_and_labels(); 
+        console.log("Updated tooltip and labels")
+
         update_sparklines();
+        console.log("Updated sparklines")
     }
 
 function reset_to_global(){
