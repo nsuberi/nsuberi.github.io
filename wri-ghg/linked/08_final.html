@@ -689,8 +689,7 @@ d3.queue()
         d3.selectAll(".region_cb")
         .attr("clicked", "clicked")
 
-        reset_to_global();
-        update_to_selected_region(clicked_country, show_scatter_name=true);
+        update_to_selected_region(clicked_country);
       })
       .on("mouseover", function(d) {
         var country = d;
@@ -703,7 +702,7 @@ d3.queue()
         // *QQ* the second check may be unnecessary... will it ever be true?
           if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
           if (!(country in lookup)) { return "#eaeaea"; }
-          update_to_selected_region(country, show_scatter_name=true)
+          update_to_selected_region(country)
         }
       })
       // Cause tooltip to follow mouse as user moves
@@ -811,7 +810,7 @@ d3.queue()
               .attr("clicked", "clicked")
 
             reset_to_global();
-            update_to_selected_region(clicked_country, show_scatter_name=true)
+            update_to_selected_region(clicked_country)
           })
           .on("mouseover", function(d) {
             var country = d.properties.iso_a3
@@ -823,7 +822,7 @@ d3.queue()
             } else {
               if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
               if (!(country in lookup)) { return "#eaeaea"; }
-              update_to_selected_region(country, show_scatter_name=true)
+              update_to_selected_region(country)
             }            
             
           })
@@ -1090,15 +1089,16 @@ d3.queue()
         })
     }
 
-    function update_to_selected_region(region_name, show_scatter_name) {
+    function update_to_selected_region(region_name) {
 
+        reset_to_global();
         // set global variable to new selected region
         selected_country = region_name
 
         update_map();
         console.log("Updated map")
 
-        update_circles(show_scatter_name);
+        update_circles();
         console.log("Updated circles")
 
         update_labels(); 
@@ -1217,7 +1217,7 @@ function update_sparklines(){
           });
 }
 
-function update_circles(show_scatter_name){
+function update_circles(){
             // uses the .raise() function to bring a point above others
         svg.selectAll(".bubble")
           .filter(function(p) {
@@ -1242,10 +1242,8 @@ function update_circles(show_scatter_name){
               .style("stroke-width", "2px");
             
             // only put label over the scatter dot if map country is selected
-            if(show_scatter_name){
-                selected_bubble.select("text")
-                  .style("display", null);
-              }
+              selected_bubble.select("text")
+                .style("display", null);
 }
 function update_map(){
           // redraw the map to highlight the country being mousedover
