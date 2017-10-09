@@ -661,11 +661,7 @@ d3.queue()
 
         // Adding this as an attempt to shortcircuit mouseover behaviir
         // if there is an active clicked_country
-
-        // TO DO
-        // this is causing problems, isolate where the problem occurs by splitting to two lines:
-        if (clicked_country) {
-          return clicked_country}
+        if (clicked_country) { return clicked_country}
 
         // *QQ* The following code should only run if there was no active clicked_country
         selected_country = country;
@@ -873,7 +869,7 @@ d3.queue()
           })
           .on("click", function(d){
             clicked_country = d;
-
+            update_to_selected_region(clicked_country)
             // TO DO
             // write behavior setting selected country
             // refactor into's it's own code that 
@@ -888,6 +884,7 @@ d3.queue()
 
             // Attempt to shortcircuit code below if there is an active clicked_country
             if (clicked_country) { return clicked_country; }            
+            update_to_selected_region(clicked_country)
 
             selected_country = country;
             var datum = lookup[country];
@@ -920,9 +917,6 @@ d3.queue()
               })
               .raise();
 
-            // TO DO
-            // implement a re-sort of the scatter points so that the small
-            // points don't get covered by bigger ones which had been previously selected
 
             selected_bubble.select("circle")
               .style("stroke", "#111")
@@ -1243,8 +1237,83 @@ d3.queue()
       });
     }
 
-    function update_chosen_region(region_name) {
+    function update_to_selected_region(region_name) {
+        // *QQ* The following code should only run if there was no active clicked_country
+        selected_country = region_name;
 
+        // store data associated with this country
+        // must be in data load await() callback to ensure data is ready for this step
+        var datum = lookup[selected_country];
+
+        // change labels to be mousedover country's name
+        // *QQ* it seems like idLookup is being created below, after loading the map
+        // Why is this OK?
+        d3.selectAll(".country-label").text(idLookup[selected_country].name);
+
+        // redraw the map to highlight the country being mousedover
+        map_svg.selectAll("path.country")
+          .style("opacity", function(p) {
+            return p.id == String(+idLookup[selected_country]["country-code"]) ? 1 : 0.3;
+          })
+          .style("stroke", function(p) {
+            return p.id == String(+idLookup[selected_country]["country-code"]) ? "#222" : null;
+          });
+          
+        // Set text for tooltip
+
+        // TO DO - Done?
+        // cut down what gets displayed here to only be the x- and y-metric
+        // *QQ* is the addition below sufficient?
+
+        tooltip.style("display", null).html("");
+        tooltip.append("h3").text(idLookup[selected_country].name);
+        d3.keys(datum).forEach(function(metric) {
+          // Added the && and || clause
+          if (datum[metric][year] && (metric == active_ymetric || metric == active_metric) ) {
+            var div = tooltip.append("div");
+            div.append("span").text(metric_lookup[metric].name + ": ");
+            div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
+            div.append("span").text(" " + metric_lookup[metric].units);
+          }
+        });
+
+        // uses the .raise() function to bring a point above others
+        svg.selectAll(".bubble")
+          .filter(function(p) {
+            return selected_country == p;
+          })
+          .raise();
+
+            // TO DO
+            // implement a re-sort of the scatter points so that the small
+            // points don't get covered by bigger ones which had been previously selected
+
+
+        // setting style of circle to show bold line around circumference
+        svg.selectAll(".bubble circle")
+          .style("stroke", function(p) {
+            return selected_country == p ? "#111" : null;
+          })
+          .style("stroke-width", function(p) {
+            return selected_country == p ? "2px" : null;
+          });
+
+        // update wb indicators
+        multiples.each(function(metric) {
+              var series = [];
+              d3.range(2000,2016).forEach(function(year) {
+                series.push({
+                  year: +year,
+                  value: +datum[metric][year]
+                })
+              });
+              d3.select(this)
+                .select("path.spark")
+                .attr("d", metric_lookup[metric].line(series))
+            });
+
+        // outsource this operation to this function
+        updateDataValues();
     }
 
 
