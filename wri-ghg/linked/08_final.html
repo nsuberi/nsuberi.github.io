@@ -1041,7 +1041,7 @@ d3.queue()
       updateBubbles();
 
       // Was UpdateDataValues(), break apart here
-      update_tooltip();
+      update_tooltip_and_labels(); 
       update_sparklines();
 
     }
@@ -1109,13 +1109,14 @@ d3.queue()
         })
     }
 
+    /*
     function updateDataValues() {
       var datum = lookup[selected_country];
       //tooltip.selectAll("div").remove();
 
       //d3.selectAll(".multiple-value").text("");
 
-      /* Potentially redundant?
+      Potentially redundant?
       d3.keys(datum).forEach(function(metric) {
         if (datum[metric][year]) {
           var div = tooltip.append("div");
@@ -1139,7 +1140,7 @@ d3.queue()
 
         update_map();
         update_circles(show_scatter_name);
-        update_tooltip(); 
+        update_tooltip_and_labels(); 
         update_sparklines();
     }
 
