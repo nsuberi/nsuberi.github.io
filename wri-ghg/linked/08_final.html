@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test11--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test12--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -330,6 +330,13 @@ var map_svg = map_container
   .append("svg")
     .attr("width", map_width)
     .attr("height", map_height);
+
+svg.append("text")
+    .attr("x", 6)
+    .attr("y", -5)
+    .attr("class", "label country-label")
+    .text("Selected country: " + selected_country)
+
 
 map_container.append("a")
   .text("Colored by Territorial ICGGD Value")
@@ -704,8 +711,11 @@ d3.queue()
       .attr("class", "label active-ymetric-label")
       // changed this, no longer including (units)
       .text(metric_lookup[active_ymetric].name)
-      .append("span")
+    svg.append("text")
+      .attr("x", 6)
+      .attr("y", 15)
       .attr("class", "active-ymetric-label-value");
+
       // Label displaying current years being shown
     var year_label = svg.append("text")
       .attr("x", width-2)
@@ -716,15 +726,20 @@ d3.queue()
       .style("font-size", "36px")
       .text("1999-2000");
       // Label showing which x-metric is active
+
+    svg.append("text")
+      .attr("x", width-2)
+      .attr("y", height-36)
+      .attr("text-anchor", "end")
+      .attr("class", "active-metric-label")
+      // changed this, no longer including (units)
+      .text(metric_lookup[active_metric].name)
+      
     svg.append("text")
       .attr("x", width-2)
       .attr("y", height-6)
       .attr("text-anchor", "end")
-      .attr("class", "active-metric-label-value")
-      // changed this, no longer including (units)
-      .text(metric_lookup[active_metric].name)
-      .append("span")
-      .attr("class", "value active-metric-label");
+      .attr("class", "active-metric-label-value");
 
 
 
@@ -842,6 +857,10 @@ d3.queue()
         transition_scatter_and_map();
       });
     console.log("set behavior for multiples")
+
+
+
+
 
 // HELPER FUNCTIONS
 
@@ -1073,6 +1092,7 @@ function reset_to_global(){
           // Reselect global extent, update text
             selected_country = "WLD";
             d3.selectAll(".country-label").text("Global");
+
             
             // set all countries back to focus
             map_svg.selectAll("path.country")
@@ -1118,7 +1138,7 @@ function update_labels(){
         // if lookup had the country name, wouldn't need idLookup here
 
         country_name = lookup[selected_country].name
-        d3.selectAll(".country-label").text(country_name);
+        d3.selectAll(".country-label").text(country_name); 
 
         // clear tooltip, change header name
         
