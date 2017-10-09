@@ -643,7 +643,7 @@ d3.queue()
 
         // Need to reset to global, then select anew
         reset_to_global();
-        update_to_selected_region(clicked_country);
+        update_to_selected_region(clicked_country, show_scatter_name=true);
 
         // TO DO 
         // expand this function to set chosen_country
@@ -668,7 +668,7 @@ d3.queue()
         // *QQ* the second check may be unnecessary... will it ever be true?
           if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
           if (!(country in lookup)) { return "#eaeaea"; }
-          update_to_selected_region(country)
+          update_to_selected_region(country, show_scatter_name=false)
         }
 
         
@@ -779,8 +779,6 @@ d3.queue()
           idLookup[d["alpha-3"]] = d;
         });
 
-
-
         // Set country name
         // may have to change idLookup[d].name, depending on whether name
         // was an attribute of the Stamen map objects
@@ -828,7 +826,7 @@ d3.queue()
 
             // need to reset to clear styles, then select anew
             reset_to_global();
-            update_to_selected_region(clicked_country)
+            update_to_selected_region(clicked_country, show_scatter_name=true)
 
           })
           .on("mouseover", function(d) {
@@ -845,7 +843,7 @@ d3.queue()
               if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
               if (!(country in lookup)) { return "#eaeaea"; }
 
-              update_to_selected_region(country)
+              update_to_selected_region(country, show_scatter_name=true)
             }            
             
           })
@@ -1128,7 +1126,7 @@ d3.queue()
       });
     }
 
-    function update_to_selected_region(region_name, mouse_on_map) {
+    function update_to_selected_region(region_name, show_scatter_name) {
         // *QQ* The following code should only run if there was no active clicked_country
         selected_country = region_name;
         console.log("Selected region:")
@@ -1198,7 +1196,7 @@ d3.queue()
               .style("stroke-width", "2px");
             
             // only put label over the scatter dot if map country is selected
-            if(mouse_on_map){
+            if(show_scatter_name){
                 selected_bubble.select("text")
                   .style("display", null);
               }
