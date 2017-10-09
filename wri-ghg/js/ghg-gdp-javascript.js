@@ -1215,6 +1215,8 @@ d3.queue()
     function updateDataValues() {
 
       var datum = lookup[selected_country];
+      console.log(lookup)
+      console.log(selected_country)
       console.log("just assigned")
       console.log(datum)
 
