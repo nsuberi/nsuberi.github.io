@@ -661,7 +661,11 @@ d3.queue()
 
         // Adding this as an attempt to shortcircuit mouseover behaviir
         // if there is an active clicked_country
-        if (clicked_country) {return clicked_country}
+
+        // TO DO
+        // this is causing problems, isolate where the problem occurs by splitting to two lines:
+        if (clicked_country) {
+          return clicked_country}
 
         // *QQ* The following code should only run if there was no active clicked_country
         selected_country = country;
