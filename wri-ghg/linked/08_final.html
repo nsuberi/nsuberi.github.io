@@ -871,6 +871,8 @@ d3.queue()
     };
 
     function updateXMetric(active_metric) {
+
+      datum = lookup[selected_country]
       d3.selectAll(".active-metric-label").text(metric_lookup[active_metric].name);
       d3.selectAll(".active-metric-label-value").text(metric_lookup[active_metric].format(+datum[active_metric][year]) + " " + metric_lookup[active_metric].units);
 
@@ -904,6 +906,7 @@ d3.queue()
 
     function updateYMetric(active_ymetric) {
 
+      datum = lookup[selected_country]
       d3.selectAll(".active-ymetric-label").text(metric_lookup[active_ymetric].name);
       d3.selectAll(".active-ymetric-label-value").text(metric_lookup[active_ymetric].format(+datum[active_ymetric][year]) + " " + metric_lookup[active_ymetric].units);
 
