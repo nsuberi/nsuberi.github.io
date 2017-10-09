@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test5--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test6--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -748,26 +748,12 @@ d3.queue()
     d3.json("../data/all_primary_countries.json", function(error, world){
       if (error) throw error;
 
-      // Experimental logs
-      //console.log(world)
-      //console.log(world.features)
-      //console.log(world.objects.countries)
-      //console.log(topojson.feature(world, world.objects.countries).features)
-
       map_svg.selectAll("path.country")
         //.data(topojson.feature(world, world.objects.countries).features)
         .data(world.features)
         .enter().append("path")
           .attr("class", "country")
           .attr("d", path);
-
-      // Create lat-lon mesh as background
-      /*
-      map_svg.insert("path", ".graticule")
-          .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
-          .attr("class", "boundary")
-          .attr("d", path);
-      */
 
       // After ensuring the map data has loaded, load the keys between map objects and data
       d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
@@ -871,13 +857,14 @@ d3.queue()
 
 
           });
+
+        // Set year and cue playforward at end of map load
+        setYear(2000);
+        setTimeout(nextYear, 1100);
+        console.log("set year and cued nextYear")
+        // End country data load logic
       });
 
-
-    // Set year and cue playforward at end of map load
-    setYear(2000);
-    setTimeout(nextYear, 1100);
-    console.log("set year and cued nextYear")
     // End map load logic
     });
 
