@@ -659,67 +659,11 @@ d3.queue()
         // *QQ* the second check may be unnecessary... will it ever be true?
         if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
         if (!(country in lookup)) { return "#eaeaea"; }
-
         // Adding this as an attempt to shortcircuit mouseover behaviir
         // if there is an active clicked_country
         if (clicked_country) { return clicked_country}
 
-        // *QQ* The following code should only run if there was no active clicked_country
-        selected_country = country;
-
-        // store data associated with this country
-        // must be in data load await() callback to ensure data is ready for this step
-        var datum = lookup[country];
-
-        // change labels to be mousedover country's name
-        // *QQ* it seems like idLookup is being created below, after loading the map
-        // Why is this OK?
-        d3.selectAll(".country-label").text(idLookup[d].name);
-
-        // redraw the map to highlight the country being mousedover
-        map_svg.selectAll("path.country")
-          .style("opacity", function(p) {
-            return p.id == String(+idLookup[d]["country-code"]) ? 1 : 0.3;
-          })
-          .style("stroke", function(p) {
-            return p.id == String(+idLookup[d]["country-code"]) ? "#222" : null;
-          });
-          
-        // Set text for tooltip
-
-        // TO DO - Done?
-        // cut down what gets displayed here to only be the x- and y-metric
-        // *QQ* is the addition below sufficient?
-
-        tooltip.style("display", null).html("");
-        tooltip.append("h3").text(idLookup[d].name);
-        d3.keys(datum).forEach(function(metric) {
-          // Added the && and || clause
-          if (datum[metric][year] && (metric == active_ymetric || metric == active_metric) ) {
-            var div = tooltip.append("div");
-            div.append("span").text(metric_lookup[metric].name + ": ");
-            div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
-            div.append("span").text(" " + metric_lookup[metric].units);
-          }
-        });
-
-        // uses the .raise() function to bring a point above others
-        svg.selectAll(".bubble")
-          .filter(function(p) {
-            return country == p;
-          })
-          .raise();
-        // setting style of circle to show bold line around circumference
-        svg.selectAll(".bubble circle")
-          .style("stroke", function(p) {
-            return country == p ? "#111" : null;
-          })
-          .style("stroke-width", function(p) {
-            return country == p ? "2px" : null;
-          });
-
-        // outsource this operation to this function
-        updateDataValues();
+        update_to_selected_region(clicked_country);
       })
       // Cause tooltip to follow mouse as user moves
       .on("mousemove", function(d) {
