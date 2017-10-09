@@ -1139,10 +1139,13 @@ d3.queue()
         // redraw the map to highlight the country being mousedover
         map_svg.selectAll("path.country")
           .style("opacity", function(p) {
-            return p.id == String(+idLookup[selected_country]["country-code"]) ? 1 : 0.3;
+            //return p.properties.iso_a3 == String(+idLookup[selected_country]["country-code"]) ? 1 : 0.3;
+            return p.properties.iso_a3 == String(selected_country) ? 1 : 0.3;
+
           })
           .style("stroke", function(p) {
-            return p.id == String(+idLookup[selected_country]["country-code"]) ? "#222" : null;
+            //return p.properties.iso_a3 == String(+idLookup[selected_country]["country-code"]) ? "#222" : null;
+            return p.properties.iso_a3 == String(selected_country) ? "#222" : null;
           });
           
         // Set text for tooltip
