@@ -653,16 +653,17 @@ d3.queue()
         // rename d as country for clarify
         var country = d;
 
-        // if country is explicitly excluded, or doesn't show up in lookup return gray
-        // lookup is built from all of the wb_data 
-        // *QQ* the second check may be unnecessary... will it ever be true?
-        if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
-        if (!(country in lookup)) { return "#eaeaea"; }
         // Adding this as an attempt to shortcircuit mouseover behaviir
         // if there is an active clicked_country
         if (clicked_country) { 
           return clicked_country
         } else {
+
+        // if country is explicitly excluded, or doesn't show up in lookup return gray
+        // lookup is built from all of the wb_data 
+        // *QQ* the second check may be unnecessary... will it ever be true?
+          if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
+          if (!(country in lookup)) { return "#eaeaea"; }
           update_to_selected_region(country)
         }
 
@@ -810,15 +811,16 @@ d3.queue()
 
           })
           .on("mouseover", function(d) {
-            if (!(d.id in isoLookup)) { return "#eaeaea"; }
-            var country = isoLookup[d.id]["alpha-3"];
-            if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
-            if (!(country in lookup)) { return "#eaeaea"; }
 
             // Attempt to shortcircuit code below if there is an active clicked_country
             if (clicked_country) { 
               return clicked_country; 
             } else {
+              if (!(d.id in isoLookup)) { return "#eaeaea"; }
+              var country = isoLookup[d.id]["alpha-3"];
+              if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
+              if (!(country in lookup)) { return "#eaeaea"; }
+
               update_to_selected_region(country)
             }            
             
