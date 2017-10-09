@@ -307,7 +307,7 @@ var height = 560 - margin.top - margin.bottom;
 
 var lookup = {};
 
-var tooltip = d3.select("#tooltip");
+// var tooltip = d3.select("#tooltip");
 
 var map_width = 620;
 var map_height = 560;
@@ -443,49 +443,65 @@ map_svg.append("path")
 // The rest of the code follows this function call
 // which ensures the data is loaded before graphing it
 d3.queue()
+// Annual change
   .defer(d3.csv, "../final-data/GDP\ annual\ change\ 2000-15\ 9.28.17.csv")
   .defer(d3.csv, "../final-data/CO2 annual change data 2000-2015 9.18.17.csv")
-  .defer(d3.csv, "../final-data/wb_data\ 9.29.17.csv")
+  .defer(d3.csv, "../final-data/consumption\ CO2\ annual\ change\ data\ 2000-2015\ 9.28.17.csv")
+// Absolute value
   .defer(d3.csv, "../final-data/absolute\ country\ GDP\ 1999-2015.csv")
   .defer(d3.csv, "../final-data/absolute\ country\ annual\ carbon\ emissions\ 2000-2015.csv")
-  .defer(d3.csv, "../final-data/consumption\ CO2\ annual\ change\ data\ 2000-2015\ 9.28.17.csv")
+// ICGGD index value
   .defer(d3.csv, "../data/Index\ calculated\ with\ Territorial\ Emissions\ and\ GDP.csv")
-  .await(function(error, raw_gdp, raw_co2, wb_data, abs_gdp, abs_carbon, consumption_co2, index_territorial) {
+// World Bank indicators
+  .defer(d3.csv, "../final-data/wb_data\ 9.29.17.csv")
+  .await(function(error, raw_gdp, raw_co2, consumption_co2, 
+    abs_gdp, abs_carbon, index_territorial, wb_data) {
 
 
     // Fill in lookup table
 
+// Annual change
     raw_gdp.forEach(function(d) {
       lookup[d["ISO"]] = lookup[d["ISO"]] || {};
       lookup[d["ISO"]]["GDP"] = d;
+      lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["Country Name"]
     });
     raw_co2.forEach(function(d) {
       lookup[d["ISO"]] = lookup[d["ISO"]] || {};
       lookup[d["ISO"]]["CO2"] = d;
-    });
-    abs_gdp.forEach(function(d) {
-      lookup[d["ISO"]] = lookup[d["ISO"]] || {};
-      lookup[d["ISO"]]["abs_gdp"] = d;
-    });
-    abs_carbon.forEach(function(d) {
-      lookup[d["ISO"]] = lookup[d["ISO"]] || {};
-      lookup[d["ISO"]]["abs_carbon"] = d;
+      lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["wb_name"]
     });
     consumption_co2.forEach(function(d) {
       lookup[d["ISO"]] = lookup[d["ISO"]] || {};
       lookup[d["ISO"]]["consumption_co2"] = d;
+      lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["wb_name"]
     });
+// Absolute Value
+    abs_gdp.forEach(function(d) {
+      lookup[d["ISO"]] = lookup[d["ISO"]] || {};
+      lookup[d["ISO"]]["abs_gdp"] = d;
+      lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["Country Name"]
+    });
+    abs_carbon.forEach(function(d) {
+      lookup[d["ISO"]] = lookup[d["ISO"]] || {};
+      lookup[d["ISO"]]["abs_carbon"] = d;
+      lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["country"]
+    });
+// ICGGD index values
     index_territorial.forEach(function(d) {
       lookup[d["ISO"]] = lookup[d["ISO"]] || {};
       lookup[d["ISO"]]["index_territorial"] = d;
+ // Doesn't have full country names
+ //     lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["Country Name"]
     });
-
+// World Bank indicators
     wb_data.forEach(function(d) {
       metrics.forEach(function(metric) {
         if (metric in d) {
           lookup[d["country_code"]] = lookup[d["country_code"]] || {};
           lookup[d["country_code"]][metric] = lookup[d["country_code"]][metric] || {};
           lookup[d["country_code"]][metric][d.year] = d[metric];
+          // Doesn't have full country names
         }
       });
     });
@@ -627,6 +643,17 @@ d3.queue()
       });
 
     group
+      .append("text")
+      .attr("y", -20)
+      .attr("text-anchor", "middle")
+      .style("font-weight", "bold")
+      .text(function(d) {
+        // Changed this from idLookup to lookup
+        return d in lookup ? lookup[d].name : "";
+      })
+      .style("display", "none");
+
+    group
       .append("circle")
       // the circle gets drawn here... above was only a reference
       // to the center of a bubble element
@@ -636,77 +663,39 @@ d3.queue()
       .style("fill", function(d) {
         return "#777";
       })
-      // on click, announce name in console
       .on("click", function(d) {
         clicked_country = d
-        console.log(d); 
-
-        // Need to reset to global, then select anew
         reset_to_global();
         update_to_selected_region(clicked_country, show_scatter_name=true);
-
-        // TO DO 
-        // expand this function to set chosen_country
-        // same behavior as mouseover
-        // will persist until user clicks on another country
-        // or a background svg in front of everything as a click wall
-
       })
       .on("mouseover", function(d) {
-
-        // rename d as country for clarify
         var country = d;
-
-        // Adding this as an attempt to shortcircuit mouseover behaviir
-        // if there is an active clicked_country
         if (clicked_country) { 
-
-          if(country == clicked_country){
-            revive_tooltip();
-          }
-
+          //if(country == clicked_country){
+          //  revive_tooltip();
+          //}
           return clicked_country
         } else {
-
-        // if country is explicitly excluded, or doesn't show up in lookup return gray
-        // lookup is built from all of the wb_data 
         // *QQ* the second check may be unnecessary... will it ever be true?
           if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
           if (!(country in lookup)) { return "#eaeaea"; }
           update_to_selected_region(country, show_scatter_name=false)
         }
-
-        
       })
       // Cause tooltip to follow mouse as user moves
-      .on("mousemove", function(d) {
-        return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
-      })
-      // Right now, will trigger back to WLD
-
-      // TO DO
-      // consider how onclick, onmouseover, and onmouseout interact
-      // onclick (country): sets selected_country to chosen country
-      //// clicked_country = d
-
-      // onmouseover: sets selected_country to chosen country
-      //// selected_country = clicked_country || d
-      // onmouseout: sets selected_country back to WLD
-      //// selected_country = clicked_country || d
-      // onclick (canvas of scatterplot or map): sets selected_country back to WLD
-      //// clicked_country = null
-
+      //.on("mousemove", function(d) {
+      //  return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
+      //})
       .on("mouseout", function() {
 
         // Attempt to short-circuit if there is an active clicked_country
         if (clicked_country) { 
-          kill_tooltip();
+          //kill_tooltip();
           return clicked_country; 
         } else {
           reset_to_global()
         }
       })
-
 
       // Label displaying which y-metric is active
     svg.append("text")
@@ -755,54 +744,18 @@ d3.queue()
           .attr("class", "country")
           .attr("d", path);
 
-      // After ensuring the map data has loaded, load the keys between map objects and data
-      d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
-        
-        // TO DO
-        // investigate how this works as a key between the map and the wb data
+        // setYear depends on data and map both being loaded
+        // uses idLookup
+        setYear(2000);
+        setTimeout(nextYear, 1100);
+         console.log("set year and cued nextYear")
 
-        // Are these two redundant?
-        
-        //isoCodes.forEach(function(d) {
-        //  isoLookup[String(+d["country-code"])] = d;
-        //});
-        
-        isoCodes.forEach(function(d) {
-          idLookup[d["alpha-3"]] = d;
-        });
-
-        // Set country name
-        // may have to change idLookup[d].name, depending on whether name
-        // was an attribute of the Stamen map objects
-
-        // *QQ* WHAT IS THIS GROUP CODE DOING DOWN HERE?
-        group
-          .append("text")
-          .attr("y", -20)
-          .attr("text-anchor", "middle")
-          .style("font-weight", "bold")
-          .text(function(d) {
-            return d in idLookup ? idLookup[d].name : "";
-          })
-          .style("display", "none");
-
-        //
         map_svg.selectAll("path.country")
           .style("fill", function(d) {
-
-
-            //console.log(d)
-            //console.log(d.properties.iso_a3)
-
-            //if (!(d.id in isoLookup)) { return "#eaeaea"; }
-
-            //var country = isoLookup[d.id]["alpha-3"];
             var country = d.properties.iso_a3
-
             if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
             if (!(country in lookup)) { return "#eaeaea"; }
             var datum = lookup[country];
-            //console.log(datum);
             if (datum[active_ymetric][year] == "") { return "#eaeaea" };
 
             // TO DO
@@ -815,52 +768,34 @@ d3.queue()
           })
           .on("click", function(d){
             clicked_country = d.properties.iso_a3;
-
-            // need to reset to clear styles, then select anew
             reset_to_global();
             update_to_selected_region(clicked_country, show_scatter_name=true)
-
           })
           .on("mouseover", function(d) {
-
             var country = d.properties.iso_a3
-            // Attempt to shortcircuit code below if there is an active clicked_country
             if (clicked_country) { 
-
-              if(country == clicked_country){
-                revive_tooltip();
-              }
+              //if(country == clicked_country){
+              //  revive_tooltip();
+              //}
               return clicked_country; 
             } else {
-
-              //if (!(d.id in isoLookup)) { return "#eaeaea"; }
-              //var country = isoLookup[d.id]["alpha-3"];
               if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
               if (!(country in lookup)) { return "#eaeaea"; }
-
               update_to_selected_region(country, show_scatter_name=true)
             }            
             
           })
-          .on("mousemove", function(d) {
-            return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
-          })
+          //.on("mousemove", function(d) {
+          //  return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
+          //})
           .on("mouseout", function() {
-
-            // Attempt to shortcircuit code below if there is an active clicked_country
             if (clicked_country) { 
-              kill_tooltip();
+              //kill_tooltip();
               return clicked_country; 
             } else {
               reset_to_global();
             } 
-
-
           });
-
-
-        // End country data load logic
-      });
 
     // End map load logic
     });
@@ -882,9 +817,6 @@ d3.queue()
       });
       // Set year and cue playforward at end of map load
       console.log("set behavior for time slider")
-      setYear(2000);
-      setTimeout(nextYear, 1100);
-      console.log("set year and cued nextYear")
       
 
     // define click-on-wb-indicator behavior
@@ -1040,7 +972,7 @@ d3.queue()
       transition_scatter_and_map();
 
       // Was UpdateDataValues(), break apart here
-      update_tooltip_and_labels(); 
+      update_labels(); 
       update_sparklines();
 
     }
@@ -1120,7 +1052,7 @@ d3.queue()
         update_circles(show_scatter_name);
         console.log("Updated circles")
 
-        update_tooltip_and_labels(); 
+        update_labels(); 
         console.log("Updated tooltip and labels")
 
         update_sparklines();
@@ -1152,12 +1084,13 @@ function reset_to_global(){
               .attr("d", "");
 
             // hides the tooltip
-            tooltip.style("display", "none");
+            //tooltip.style("display", "none");
 
             // uses the global selected_country variable to update
             update_sparklines();
 }
 
+/*
 function kill_tooltip(){
     // hides the tooltip
     tooltip.style("display", "none");
@@ -1166,27 +1099,44 @@ function revive_tooltip(){
     // hides the tooltip
     tooltip.style("display", null);
 }
+*/
 
-function update_tooltip_and_labels(){
+function update_labels(){
 
         // change labels to be mousedover country's name
-        country_name = idLookup[selected_country].name
+
+        // if lookup had the country name, wouldn't need idLookup here
+
+        country_name = lookup[selected_country].name
         d3.selectAll(".country-label").text(country_name);
 
         // clear tooltip, change header name
-        tooltip.style("display", null).html("");
-        tooltip.append("h3").text(country_name);
+        
+        // TAKING OUT THE TOOL TIP
+        // tooltip.style("display", null).html("");
+        // tooltip.append("h3").text(country_name);
 
         // grab country's data, populate tooltip
         var datum = lookup[selected_country];
         d3.keys(datum).forEach(function(metric) {
 
           if (datum[metric][year] && ((metric == active_ymetric) || (metric == active_metric)) ) {
-            console.log("appending to tooltip")
-            var div = tooltip.append("div");
-            div.append("span").text(metric_lookup[metric].name + ": ");
-            div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
-            div.append("span").text(" " + metric_lookup[metric].units);
+
+            //console.log("appending to tooltip")
+            //var div = tooltip.append("div");
+            //div.append("span").text(metric_lookup[metric].name + ": ");
+            //div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
+            //div.append("span").text(" " + metric_lookup[metric].units);
+
+            if(metric == active_metric){
+              // Update the value next to the x-axis label
+              d3.select(".active-metric-label").text(metric_lookup[metric].name + ": " + metric_lookup[metric].format(+datum[metric][year]) + " " + metric_lookup[metric].units)
+            } else {
+              // is equal to active_ymetric
+              // Update value next to the y-axis label
+              d3.select(".active-ymetric-label").text(metric_lookup[metric].name + ": " + metric_lookup[metric].format(+datum[metric][year]) + " " + metric_lookup[metric].units)
+            }
+
           }
         });
 }
