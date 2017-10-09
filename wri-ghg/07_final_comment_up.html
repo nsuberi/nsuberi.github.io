@@ -800,13 +800,14 @@ d3.queue()
     // *QQ* Convert wri-bounds to topojson? 
     // Does make them smaller, then don't have to chage the add code :)
 
-    d3.json("../data/all_primary_countries.json", function(error, world) {
+    d3.json("../data/wri-bounds-topo.json", function(error, world) {
       if (error) throw error;
 
       // Experimental logs
       console.log(world)
       console.log(world.objects)
       console.log(world.objects.countries)
+      console.log(topojson.feature(world, world.objects.countries).features)
 
       map_svg.selectAll("path.country")
         .data(topojson.feature(world, world.objects.countries).features)
