@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test16--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test17--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -712,11 +712,12 @@ d3.queue()
       .attr("y", -5)
       .attr("class", "label active-ymetric-label")
       // changed this, no longer including (units)
-      .text(metric_lookup[active_ymetric].name)
-    svg.append("text")
+      .text(metric_lookup[active_ymetric].name + ": ")
+
+/*    svg.append("text")
       .attr("x", 6)
       .attr("y", 15)
-      .attr("class", "active-ymetric-label-value");
+      .attr("class", "active-ymetric-label-value");*/
 
       // Label displaying current years being shown
     var year_label = svg.append("text")
@@ -729,20 +730,20 @@ d3.queue()
       .text("1999-2000");
       // Label showing which x-metric is active
 
-    svg.append("text")
-      .attr("x", width-2)
-      .attr("y", height-36)
-      .attr("text-anchor", "end")
-      .attr("class", "active-metric-label")
-      // changed this, no longer including (units)
-      .text(metric_lookup[active_metric].name)
-      
+
     svg.append("text")
       .attr("x", width-2)
       .attr("y", height-6)
       .attr("text-anchor", "end")
-      .attr("class", "active-metric-label-value");
+      .attr("class", "active-metric-label")
+      // changed this, no longer including (units)
+      .text(metric_lookup[active_metric].name);
 
+    svg.append("text")
+      .attr("x", width-2)
+      .attr("y", height-20)
+      .attr("text-anchor", "end")
+      .attr("class", "active-metric-label-value");
 
 
     /* Map */
@@ -928,8 +929,7 @@ d3.queue()
     function updateYMetric(active_ymetric) {
 
       datum = lookup[selected_country]
-      d3.selectAll(".active-ymetric-label").text(metric_lookup[active_ymetric].name);
-      d3.selectAll(".active-ymetric-label-value").text(metric_lookup[active_ymetric].format(+datum[active_ymetric][year]) + " " + metric_lookup[active_ymetric].units);
+      d3.selectAll(".active-ymetric-label").text(metric_lookup[active_ymetric].name + ": " + metric_lookup[active_ymetric].format(+datum[active_ymetric][year]) + " " + metric_lookup[active_ymetric].units);
 
       // for 2000-2015 year ranges
       if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[active_ymetric]) {
@@ -1142,7 +1142,7 @@ function update_labels(){
 
         country_name = lookup[selected_country].name
         d3.selectAll(".country-label").text(country_name); 
-       // d3.selectAll(".selected-country-label").text("Selected Region: " + country_name); 
+        d3.selectAll(".selected-country-label").text("Selected Region: " + country_name); 
 
         // clear tooltip, change header name
         
