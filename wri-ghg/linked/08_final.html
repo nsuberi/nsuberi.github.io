@@ -1130,6 +1130,8 @@ d3.queue()
 
     function update_to_selected_region(region_name, show_scatter_name) {
 
+
+        selected_country = region_name
         update_map();
         console.log("Updated map")
 
@@ -1184,7 +1186,6 @@ function revive_tooltip(){
 }
 
 function update_tooltip_and_labels(){
-
 
         // change labels to be mousedover country's name
         country_name = idLookup[selected_country].name
