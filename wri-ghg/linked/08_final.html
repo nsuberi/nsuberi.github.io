@@ -660,6 +660,11 @@ d3.queue()
         // Adding this as an attempt to shortcircuit mouseover behaviir
         // if there is an active clicked_country
         if (clicked_country) { 
+
+          if(country == clicked_country){
+            revive_tooltip();
+          }
+
           return clicked_country
         } else {
 
@@ -834,6 +839,10 @@ d3.queue()
 
             // Attempt to shortcircuit code below if there is an active clicked_country
             if (clicked_country) { 
+
+              if(country == clicked_country){
+                revive_tooltip();
+              }
               return clicked_country; 
             } else {
 
@@ -1259,6 +1268,10 @@ function reset_to_global(){
 function kill_tooltip(){
     // hides the tooltip
     tooltip.style("display", "none");
+}
+function revive_tooltip(){
+    // hides the tooltip
+    tooltip.style("display", null);
 }
 
 // End of actions following data import
