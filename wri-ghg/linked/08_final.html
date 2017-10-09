@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test23--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test24--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -318,6 +318,46 @@ var svg = d3.select("body")
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // Label displaying which y-metric is active
+    svg.append("text")
+      .attr("x", 6)
+      .attr("y", -5)
+      .attr("class", "label active-ymetric-label")
+      // changed this, no longer including (units)
+      .text(metric_lookup[active_ymetric].name + ": ")
+
+/*    svg.append("text")
+      .attr("x", 6)
+      .attr("y", 15)
+      .attr("class", "active-ymetric-label-value");*/
+
+      // Label displaying current years being shown
+    var year_label = svg.append("text")
+      .attr("x", width-2)
+      .attr("y", -5)
+      .attr("class", "label")
+      .attr("text-anchor", "end")
+      .style("font-weight", "bold")
+      .style("font-size", "36px")
+      .text("1999-2000");
+      // Label showing which x-metric is active
+
+
+    svg.append("text")
+      .attr("x", width-2)
+      .attr("y", height-6)
+      .attr("text-anchor", "end")
+      .attr("class", "active-metric-label")
+      // changed this, no longer including (units)
+      .text(metric_lookup[active_metric].name);
+
+    svg.append("text")
+      .attr("x", width-2)
+      .attr("y", height-20)
+      .attr("text-anchor", "end")
+      .attr("class", "active-metric-label-value");
+
 
 var map_container = d3.select("body")
   .append("div")
@@ -739,46 +779,6 @@ d3.queue()
           reset_to_global()
         }
       })
-
-      // Label displaying which y-metric is active
-    svg.append("text")
-      .attr("x", 6)
-      .attr("y", -5)
-      .attr("class", "label active-ymetric-label")
-      // changed this, no longer including (units)
-      .text(metric_lookup[active_ymetric].name + ": ")
-
-/*    svg.append("text")
-      .attr("x", 6)
-      .attr("y", 15)
-      .attr("class", "active-ymetric-label-value");*/
-
-      // Label displaying current years being shown
-    var year_label = svg.append("text")
-      .attr("x", width-2)
-      .attr("y", -5)
-      .attr("class", "label")
-      .attr("text-anchor", "end")
-      .style("font-weight", "bold")
-      .style("font-size", "36px")
-      .text("1999-2000");
-      // Label showing which x-metric is active
-
-
-    svg.append("text")
-      .attr("x", width-2)
-      .attr("y", height-6)
-      .attr("text-anchor", "end")
-      .attr("class", "active-metric-label")
-      // changed this, no longer including (units)
-      .text(metric_lookup[active_metric].name);
-
-    svg.append("text")
-      .attr("x", width-2)
-      .attr("y", height-20)
-      .attr("text-anchor", "end")
-      .attr("class", "active-metric-label-value");
-
 
     /* Map */
 
