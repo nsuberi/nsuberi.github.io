@@ -660,9 +660,13 @@ d3.queue()
         if (!(country in lookup)) { return "#eaeaea"; }
         // Adding this as an attempt to shortcircuit mouseover behaviir
         // if there is an active clicked_country
-        if (clicked_country) { return clicked_country}
+        if (clicked_country) { 
+          return clicked_country
+        } else {
+          update_to_selected_region(country)
+        }
 
-        update_to_selected_region(clicked_country);
+        
       })
       // Cause tooltip to follow mouse as user moves
       .on("mousemove", function(d) {
@@ -685,28 +689,11 @@ d3.queue()
       .on("mouseout", function() {
 
         // Attempt to short-circuit if there is an active clicked_country
-        if (clicked_country) { return clicked_country; }
-
-        // The following code should only run if there is no active clicked_country
-        selected_country = clicked_country || "WLD";
-        d3.selectAll(".country-label").text("Global");
-        map_svg.selectAll("path.country")
-          .style("opacity", 1)
-          .style("stroke", null);
-        svg.selectAll(".bubble circle")
-          .style("stroke", function(p) {
-            return null;
-          })
-          .style("stroke-width", function(p) {
-            return null;
-          });
-
-        d3.selectAll("path.spark")
-          .attr("d", "");
-
-        tooltip.style("display", "none");
-
-        updateDataValues();
+        if (clicked_country) { 
+          return clicked_country; 
+        } else {
+          reset_to_global()
+        }
       })
 
 
@@ -820,10 +807,6 @@ d3.queue()
           .on("click", function(d){
             clicked_country = d;
             update_to_selected_region(clicked_country)
-            // TO DO
-            // write behavior setting selected country
-            // refactor into's it's own code that 
-            // gets used by click, mouseover, mouseout
 
           })
           .on("mouseover", function(d) {
@@ -833,9 +816,12 @@ d3.queue()
             if (!(country in lookup)) { return "#eaeaea"; }
 
             // Attempt to shortcircuit code below if there is an active clicked_country
-            if (clicked_country) { return clicked_country; }            
-            update_to_selected_region(clicked_country)
-
+            if (clicked_country) { 
+              return clicked_country; 
+            } else {
+              update_to_selected_region(country)
+            }            
+            
           })
           .on("mousemove", function(d) {
             return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
@@ -843,35 +829,13 @@ d3.queue()
           .on("mouseout", function() {
 
             // Attempt to shortcircuit code below if there is an active clicked_country
-            if (clicked_country) { return clicked_country; } 
+            if (clicked_country) { 
+              return clicked_country; 
+            } else {
+              reset_to_global();
+            } 
 
-            selected_country = "WLD";
-            d3.selectAll(".country-label").text("Global");
-            
-            // set all countries back to focus
-            map_svg.selectAll("path.country")
-              .style("opacity", 1)
-              .style("stroke", null);
 
-            // de-highlight all circles
-            svg.selectAll(".bubble circle")
-              .style("stroke", null)
-              .style("stroke-width", null);
-
-            // turn off displaying the bubble's text
-            svg.selectAll(".bubble text")
-              .style("display", "none");
-
-            // set the "d" attribute on the spark line to nothing
-            // *QQ* what's going on here?
-            d3.selectAll("path.spark")
-              .attr("d", "");
-
-            // hides the tooltip
-            tooltip.style("display", "none");
-
-            // uses the global selected_country variable to update
-            updateDataValues();
           });
       });
     });
@@ -1215,7 +1179,36 @@ d3.queue()
         updateDataValues();
     }
 
+function reset_to_global(){
+          // Reselect global extent, update text
+            elected_country = "WLD";
+            d3.selectAll(".country-label").text("Global");
+            
+            // set all countries back to focus
+            map_svg.selectAll("path.country")
+              .style("opacity", 1)
+              .style("stroke", null);
 
+            // de-highlight all circles
+            svg.selectAll(".bubble circle")
+              .style("stroke", null)
+              .style("stroke-width", null);
+
+            // turn off displaying the bubble's text
+            svg.selectAll(".bubble text")
+              .style("display", "none");
+
+            // set the "d" attribute on the spark line to nothing
+            // *QQ* what's going on here?
+            d3.selectAll("path.spark")
+              .attr("d", "");
+
+            // hides the tooltip
+            tooltip.style("display", "none");
+
+            // uses the global selected_country variable to update
+            updateDataValues();
+}
 
 // End of actions following data import
   });
