@@ -4,8 +4,8 @@
 
 // Sets up page layout
 var margin = { top: 50, right: 20, bottom: 50, left: 50 };
-var width = 530 - margin.left - margin.right;
-var height = 560 - margin.top - margin.bottom;
+var scatter_width = 530 - margin.left - margin.right;
+var scatter_height = 560 - margin.top - margin.bottom;
 
 var map_width = 620;
 var map_height = 560;
@@ -234,12 +234,12 @@ var color = d3.scaleThreshold()
 // why are domains of the scales set to -0.5 to 0.5?
 var xscale = d3.scaleLinear()
   .domain([-0.5,0.5])
-  .range([0,width])
+  .range([0,scatter_width])
   .clamp("true");
 
 var yscale = d3.scaleLinear()
   .domain([-0.5,0.5])
-  .range([height,0])
+  .range([scatter_height,0])
   .clamp("true");
 
 
@@ -250,7 +250,7 @@ var yscale = d3.scaleLinear()
 // Create x- and y-axis lines
 // Use formatter (format)
 var xAxis = d3.axisBottom()
-  .tickSize(-height)
+  .tickSize(-scatter_height)
   .tickFormat(function(d) {
 //    if (d == -0.25) return "<" + format(d);
 //    if (d == 0.25) return ">" + format(d);
@@ -263,7 +263,7 @@ var yAxis = d3.axisLeft()
 //    if (d == 0) { return "N/A"; }
     return format(d);
   })
-  .tickSize(-width)
+  .tickSize(-scatter_width)
   .scale(yscale)
 
 
@@ -542,8 +542,8 @@ map_svg.append("path")
 
 var scatter_canvas = d3.select("body")
   .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    .attr("width", scatter_width + margin.left + margin.right)
+    .attr("height", scatter_height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -551,7 +551,7 @@ var scatter_canvas = d3.select("body")
 
 // Creates x-axis, y-axis
     scatter_canvas.append("g")
-      .attr("transform", "translate(0," + height + ")")
+      .attr("transform", "translate(0," + scatter_height + ")")
       .attr("class", "x axis")
       .call(xAxis);
 
@@ -573,7 +573,7 @@ var scatter_canvas = d3.select("body")
       .attr("x1", xscale(0))
       .attr("x2", xscale(0))
       .attr("y1", 0)
-      .attr("y2", height)
+      .attr("y2", scatter_height)
 
     scatter_canvas
       .append("line")
@@ -581,7 +581,7 @@ var scatter_canvas = d3.select("body")
       .style("stroke", "#777")
       .style("stroke-width", 1)
       .attr("x1", 0)
-      .attr("x2", width)
+      .attr("x2", scatter_width)
       .attr("y1", yscale(0))
       .attr("y2", yscale(0))
 
@@ -596,15 +596,15 @@ var scatter_canvas = d3.select("body")
 
   // Create label for active x-metric
     scatter_canvas.append("text")
-      .attr("x", width-2)
-      .attr("y", height-6)
+      .attr("x", scatter_width-2)
+      .attr("y", scatter_height-6)
       .attr("text-anchor", "end")
       .attr("class", "label active-metric-label")
       .text(metric_lookup[active_metric].name + " (" + metric_lookup[active_ymetric].units+ ")");
 
   // Create label for current year
     var year_label = scatter_canvas.append("text")
-      .attr("x", width-2)
+      .attr("x", scatter_width-2)
       .attr("y", -5)
       .attr("class", "label")
       .attr("text-anchor", "end")
@@ -912,7 +912,7 @@ d3.queue()
       metric_lookup[metric].longextent = metric_lookup[metric].longextent || calculated_long_extent;
     
       var yscale = metric_lookup[metric].yscale = d3.scaleLinear().domain(extent).range([70,6]).clamp(true);
-      metric_lookup[metric].scale = d3.scaleLinear().domain(extent).range([0,width]).clamp(true);
+      metric_lookup[metric].scale = d3.scaleLinear().domain(extent).range([0,scatter_width]).clamp(true);
 
       metric_lookup[metric].line = d3.line()
         .defined(function(d) { return d.value != "" && !isNaN(d.value); })
@@ -1026,7 +1026,7 @@ d3.queue()
       }
 
       var xAxis = d3.axisBottom()
-        .tickSize(-height)
+        .tickSize(-scatter_height)
         .tickFormat(metric_info.format)
         .scale(metric_scale);
 
@@ -1062,7 +1062,7 @@ d3.queue()
 
       var yAxis = d3.axisLeft()
          .tickFormat(metric_info.format)
-        .tickSize(-width)
+        .tickSize(-scatter_width)
         .scale(metric_scale)
 
       scatter_canvas.select(".y.axis")
