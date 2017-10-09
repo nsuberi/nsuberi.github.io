@@ -1039,7 +1039,11 @@ d3.queue()
       updateXMetric(active_metric);
       updateYMetric(active_ymetric);
       updateBubbles();
-      updateDataValues();
+
+      // Was UpdateDataValues(), break apart here
+      update_tooltip();
+      update_sparklines();
+
     }
 
     function updateBubbles() {
