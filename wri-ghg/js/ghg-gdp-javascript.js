@@ -746,33 +746,38 @@ d3.select("body")
   .append("div")
   .attr("id", "multiples");
 
+// Data for the multiples container is the list of var names
 var multiples = d3.select("#multiples")
   .selectAll("div")
   .data(metrics)
   .enter().append("div")
   .attr("class", "multiple")
 
-
-// References metric_lookup, defined below
+// Grabs simple var name for printing above div
 multiples.append("h3")
   .text(function(d) { return metric_lookup[d].name; });
 
+// Add some more text to the div
+// Q *** unclear
 multiples.append("h3")
   .attr("class", function(d) { return "multiple-value multiple-value-" + d })
   .text(function(d) { return ""; });
 
+// Create an SVG with which to plot the spark lines
 multiples.append("svg")
   .attr("height", "120px")
   .attr("width", "180px")
 
+// Create the spark line
  multiples.select("svg")
   .append("path")
   .attr("class", "spark")
 
 
-
+// x-span of sparkline goes from 12 -> 168 (0 + 12 -> 180 - 12)
 var multiple_xscale = d3.scaleLinear().domain([2000,2015]).range([12, 168]);
 
+// Create the line which marks current year
 multiples.select("svg")
   .append("line")
   .attr("class", "plumb")
@@ -782,6 +787,7 @@ multiples.select("svg")
   .attr("y2", 70)
   .style("stroke", "#bbb")
 
+// Create the year label, initialize to year 2000
 multiples.select("svg")
   .append("text")
   .attr("class", "multiple-year-label")
@@ -793,7 +799,7 @@ multiples.select("svg")
   .text(2000)
 
   
-  
+  // Set up behavior for what happens when a new indicator is clicked on
     d3.selectAll(".multiple")
       .on("click", function(metric) {
         // 2000-2014 for consumption_co2 only
@@ -812,24 +818,9 @@ multiples.select("svg")
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 //
 // Load data
 //
-
-
 
 d3.queue()
   .defer(d3.csv, "../final-data/GDP\ annual\ change\ 2000-15\ 9.28.17.csv")
@@ -1220,10 +1211,13 @@ d3.queue()
   
   
     function updateDataValues() {
+
       var datum = lookup[selected_country];
+
       tooltip.selectAll("div").remove();
 
       d3.selectAll(".multiple-value").text("");
+
       d3.keys(datum).forEach(function(metric) {
         if (datum[metric][year]) {
           var div = tooltip.append("div");
@@ -1235,6 +1229,8 @@ d3.queue()
       });
 
       multiples.each(function(metric) {
+        console.log(metric)
+        console.log(datum)
         if (metric in datum) {
           var series = [];
           d3.range(2000,2016).forEach(function(year) {
