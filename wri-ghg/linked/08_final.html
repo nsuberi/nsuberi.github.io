@@ -1175,9 +1175,20 @@ d3.queue()
 
         tooltip.style("display", null).html("");
         tooltip.append("h3").text(country_info.name);
+        console.log("Active metrics:")
+        console.log(active_metric)
+        console.log(active_ymetric)
+        console.log("Stored metrics")
         d3.keys(datum).forEach(function(metric) {
+          console.log(metric)
+          console.log((metric == active_ymetric) || (metric == active_metric))
+          // TO DO 
+          // Get this working, how to compare active metric
           // Added the && and || clause
-          if (datum[metric][year] && (metric == active_ymetric || metric == active_metric) ) {
+
+
+
+          if (datum[metric][year] && ((metric == active_ymetric) || (metric == active_metric)) ) {
             var div = tooltip.append("div");
             div.append("span").text(metric_lookup[metric].name + ": ");
             div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
