@@ -79,7 +79,7 @@ var metric_lookup = {
     "key": "GDP",
     "name": "GDP Change",
     "units": "",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format,
     "extent": [-0.3,0.3],
     "longextent": [-0.5,3]
@@ -88,7 +88,7 @@ var metric_lookup = {
     "key": "CO2",
     "name": "Fossil fuels and cement production emissions by country (territorial, GCB)",
     "units": "change based on Mt C",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format,
     "extent": [-0.3,0.3],
     "longextent": [-0.5,3]
@@ -97,7 +97,7 @@ var metric_lookup = {
     "key": "abs_carbon",
     "name": "Fossil fuels and cement production emissions by country (territorial, GCB)",
     "units": "Mt C",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": default_format,
     "extent": [0,10000],
     "longextent": [-0.5,3]
@@ -106,7 +106,7 @@ var metric_lookup = {
     "key": "consumption_co2",
     "name": "Consumption emissions (GCB)",
     "units": "change based on Mt C",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format,
     "extent": [-0.3,0.3],
     "longextent": [-0.5,3]
@@ -115,7 +115,7 @@ var metric_lookup = {
     "key": "index_territorial",
     "name": "Territorial ICGGD",
     "units": "",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": default_format,
     "extent": [-1,2],
     "longextent": [-0.5,3]
@@ -124,28 +124,28 @@ var metric_lookup = {
     "key": "life_expectancy_at_birth_total_years_sp_dyn_le00_in",
     "name": "Life expectancy at birth, total",
     "units": "years",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": default_format
   },
   "individuals_using_the_internet_of_population_it_net_user_z": {
     "key": "individuals_using_the_internet_of_population_it_net_user_z",
     "name": "Individuals using the Internet",
     "units": "of population",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format
   },
   "employment_to_population_ratio_15_total_modeled_ilo_est": {
     "key": "employment_to_population_ratio_15_total_modeled_ilo_est",
     "name": "Employment to population ratio, 15+, total (modeled ILO estimate)",
     "units": "",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format
   },
   "abs_gdp": {
     "key": "abs_gdp",
     "name": "GDP",
     "units": "constant 2010 US$",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format_si,
     "extent": [0,2e13],
     "longextent": [1,1e15]
@@ -154,63 +154,63 @@ var metric_lookup = {
     "key": "access_to_electricity_of_population_eg_elc_accs_zs",
     "name": "Access to electricity",
     "units": "of population",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format
   },
   "household_final_consumption_expenditure_per_capita_constant_20": {
     "key": "household_final_consumption_expenditure_per_capita_constant_20",
     "name": "Household final consumption expenditure per capita",
     "units": "constant 2010 US$",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": default_format
   },
   "merchandise_imports_current_us_tm_val_mrch_cd_wt": {
     "key": "merchandise_imports_current_us_tm_val_mrch_cd_wt",
     "name": "Merchandise imports",
     "units": "change of current US$",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format
   },
   "industry_value_added_constant_2010_us_nv_ind_totl_kd": {
     "key": "industry_value_added_constant_2010_us_nv_ind_totl_kd",
     "name": "Industry, value added",
     "units": "change of constant 2010 US$",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format
   },
   "net_migration_sm_pop_netm": {
     "key": "net_migration_sm_pop_netm",
     "name": "Net migration",
     "units": "number of persons",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format_abbrev
   },
   "total_natural_resources_rents_of_gdp_ny_gdp_totl_rt_zs": {
     "key": "total_natural_resources_rents_of_gdp_ny_gdp_totl_rt_zs",
     "name": "Total natural resources rents",
     "units": "of GDP",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format
   },
   "renewable_energy_consumption_of_total_final_energy_consumpti": {
     "key": "renewable_energy_consumption_of_total_final_energy_consumpti",
     "name": "Renewable energy consumption",
     "units": "change of share of total final energy consumption",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format
   },
   "urban_population_of_total_sp_urb_totl_in_zs": {
     "key": "urban_population_of_total_sp_urb_totl_in_zs",
     "name": "Urban population",
     "units": "of total",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format
   },
   "proportion_of_seats_held_by_women_in_national_parliaments": {
     "key": "proportion_of_seats_held_by_women_in_national_parliaments",
     "name": "Proportion of seats held by women in national parliaments",
     "units": "of total seats",
-    "scale": "d3.scaleLinear",
+    "scale": d3.scaleLinear(),
     "format": format
   }
 }
