@@ -1126,15 +1126,15 @@ d3.queue()
         selected_country = region_name;
         console.log("Update to selected region")
         console.log(selected_country)
+        console.log(idLookup[String(selected_country)].name)
+        console.log(idLookup[selected_country].name)
 
         // store data associated with this country
         // must be in data load await() callback to ensure data is ready for this step
         var datum = lookup[selected_country];
 
         // change labels to be mousedover country's name
-        // *QQ* it seems like idLookup is being created below, after loading the map
-        // Why is this OK?
-        d3.selectAll(".country-label").text(idLookup[selected_country].name);
+        d3.selectAll(".country-label").text(idLookup[String(selected_country)].name);
 
         // redraw the map to highlight the country being mousedover
         map_svg.selectAll("path.country")
