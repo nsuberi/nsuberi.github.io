@@ -739,8 +739,8 @@ d3.queue()
       if (error) throw error;
 
       // Experimental logs
-      console.log(world)
-      console.log(world.features)
+      //console.log(world)
+      //console.log(world.features)
       //console.log(world.objects.countries)
       //console.log(topojson.feature(world, world.objects.countries).features)
 
@@ -797,8 +797,8 @@ d3.queue()
           .style("fill", function(d) {
 
 
-            console.log(d)
-            console.log(d.properties.iso_a3)
+            //console.log(d)
+            //console.log(d.properties.iso_a3)
 
             //if (!(d.id in isoLookup)) { return "#eaeaea"; }
 
@@ -1124,8 +1124,8 @@ d3.queue()
     function update_to_selected_region(region_name) {
         // *QQ* The following code should only run if there was no active clicked_country
         selected_country = region_name;
+        console.log("Update to selected region")
         console.log(selected_country)
-        console.log("doing it")
 
         // store data associated with this country
         // must be in data load await() callback to ensure data is ready for this step
