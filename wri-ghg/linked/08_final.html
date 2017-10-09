@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test12--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test13--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -326,16 +326,17 @@ var map_container = d3.select("body")
     .style("position", "relative")
     .style("display", "inline-block");
 
+// Put selected region indicator at top of map
+map_container.append("text")
+    .attr("x", 6)
+    .attr("y", -5)
+    .attr("class", "label selected-country-label")
+    .text("Selected region: World")
+
 var map_svg = map_container
   .append("svg")
     .attr("width", map_width)
     .attr("height", map_height);
-
-map_container.append("text")
-    .attr("x", 6)
-    .attr("y", map_height + 6)
-    .attr("class", "label selected-country-label")
-    .text("Selected country: " + selected_country)
 
 
 map_container.append("a")
@@ -1139,7 +1140,7 @@ function update_labels(){
 
         country_name = lookup[selected_country].name
         d3.selectAll(".country-label").text(country_name); 
-        d3.selectAll(".selected-country-label").text("Selected country: " + selected_country); 
+        d3.selectAll(".selected-country-label").text("Selected country: " + country_name); 
 
         // clear tooltip, change header name
         
