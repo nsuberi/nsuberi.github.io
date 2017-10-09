@@ -1117,8 +1117,7 @@ function reset_to_global(){
           // Reselect global extent, update text
             selected_country = "WLD";
             d3.selectAll(".country-label").text("World");
-            d3.selectAll(".selected-country-label").text("Selected Region: World");
-
+            update_labels();
             
             // set all countries back to focus
             map_svg.selectAll("path.country")
@@ -1165,7 +1164,7 @@ function update_labels(){
 
         country_name = lookup[selected_country].name
         d3.selectAll(".country-label").text(country_name); 
-        d3.selectAll(".selected-country-label").text("Selected Region: " + country_name); 
+
 
         // clear tooltip, change header name
         
