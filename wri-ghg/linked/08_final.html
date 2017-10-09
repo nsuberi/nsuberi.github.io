@@ -1107,9 +1107,9 @@ d3.queue()
 
     function updateDataValues() {
       var datum = lookup[selected_country];
-      tooltip.selectAll("div").remove();
+      //tooltip.selectAll("div").remove();
 
-      d3.selectAll(".multiple-value").text("");
+      //d3.selectAll(".multiple-value").text("");
 
       /* Potentially redundant?
       d3.keys(datum).forEach(function(metric) {
@@ -1123,20 +1123,7 @@ d3.queue()
       });
       */
 
-      multiples.each(function(metric) {
-        if (metric in datum) {
-          var series = [];
-          d3.range(2000,2016).forEach(function(year) {
-            series.push({
-              year: +year,
-              value: +datum[metric][year]
-            })
-          });
-          d3.select(this)
-            .select("path.spark")
-            .attr("d", metric_lookup[metric].line(series))
-        }
-      });
+
     }
 
     function update_to_selected_region(region_name, show_scatter_name) {
@@ -1145,47 +1132,67 @@ d3.queue()
         console.log("Selected region:")
         console.log(selected_country)
         console.log("Country info:")
-        country_info = idLookup[selected_country]
-        console.log(country_info)
 
-        // store data associated with this country
-        // must be in data load await() callback to ensure data is ready for this step
-        var datum = lookup[selected_country];
+        update_map();
+        update_circles(show_scatter_name);
+        update_tooltip(); 
+        update_sparklines();
+    }
+
+function reset_to_global(){
+          // Reselect global extent, update text
+            selected_country = "WLD";
+            d3.selectAll(".country-label").text("Global");
+            
+            // set all countries back to focus
+            map_svg.selectAll("path.country")
+              .style("opacity", 1)
+              .style("stroke", null);
+
+            // de-highlight all circles
+            svg.selectAll(".bubble circle")
+              .style("stroke", null)
+              .style("stroke-width", null);
+
+            // turn off displaying the bubble's text
+            svg.selectAll(".bubble text")
+              .style("display", "none");
+
+            // set the "d" attribute on the spark line to nothing
+            // *QQ* what's going on here?
+            d3.selectAll("path.spark")
+              .attr("d", "");
+
+            // hides the tooltip
+            tooltip.style("display", "none");
+
+            // uses the global selected_country variable to update
+            update_sparklines();
+}
+
+function kill_tooltip(){
+    // hides the tooltip
+    tooltip.style("display", "none");
+}
+function revive_tooltip(){
+    // hides the tooltip
+    tooltip.style("display", null);
+}
+
+function update_tooltip_and_labels(){
 
         // change labels to be mousedover country's name
-        d3.selectAll(".country-label").text(country_info.name);
+        country_name = idLookup[selected_country].name
+        d3.selectAll(".country-label").text(country_name);
 
-        // redraw the map to highlight the country being mousedover
-        map_svg.selectAll("path.country")
-          .style("opacity", function(p) {
-            //return p.properties.iso_a3 == String(+idLookup[selected_country]["country-code"]) ? 1 : 0.3;
-            return p.properties.iso_a3 == String(selected_country) ? 1 : 0.3;
-
-          })
-          .style("stroke", function(p) {
-            //return p.properties.iso_a3 == String(+idLookup[selected_country]["country-code"]) ? "#222" : null;
-            return p.properties.iso_a3 == String(selected_country) ? "#222" : null;
-          });
-          
-        // Set text for tooltip
-
-        // TO DO - Done?
-        // cut down what gets displayed here to only be the x- and y-metric
-        // *QQ* is the addition below sufficient?
-
+        // clear tooltip, change header name
         tooltip.style("display", null).html("");
-        tooltip.append("h3").text(country_info.name);
-        console.log("Active metrics:")
-        console.log(active_metric)
-        console.log(active_ymetric)
-        console.log("Should be true twice:")
+        tooltip.append("h3").text(country_name);
+
+        // grab country's data, populate tooltip
+        var datum = lookup[selected_country];
         d3.keys(datum).forEach(function(metric) {
 
-          // TO DO 
-          // Get this working, how to compare active metric
-          // Added the && and || clause
-
-          console.log((datum[metric][year] && ((metric == active_ymetric) || (metric == active_metric)) ))
           if (datum[metric][year] && ((metric == active_ymetric) || (metric == active_metric)) ) {
             console.log("appending to tooltip")
             var div = tooltip.append("div");
@@ -1194,8 +1201,31 @@ d3.queue()
             div.append("span").text(" " + metric_lookup[metric].units);
           }
         });
+}
 
-        // uses the .raise() function to bring a point above others
+function update_sparklines(){
+
+        var datum = lookup[selected_country];
+        
+        // update wb indicators
+        multiples.each(function(metric) {
+          if (metric in datum) {
+              var series = [];
+              d3.range(2000,2016).forEach(function(year) {
+                series.push({
+                  year: +year,
+                  value: +datum[metric][year]
+                })
+              });
+              d3.select(this)
+                .select("path.spark")
+                .attr("d", metric_lookup[metric].line(series))
+            }
+          });
+}
+
+function update_circles(show_scatter_name){
+            // uses the .raise() function to bring a point above others
         svg.selectAll(".bubble")
           .filter(function(p) {
             return selected_country == p;
@@ -1223,64 +1253,19 @@ d3.queue()
                 selected_bubble.select("text")
                   .style("display", null);
               }
-            
-
-        // update wb indicators
-        multiples.each(function(metric) {
-              var series = [];
-              d3.range(2000,2016).forEach(function(year) {
-                series.push({
-                  year: +year,
-                  value: +datum[metric][year]
-                })
-              });
-              d3.select(this)
-                .select("path.spark")
-                .attr("d", metric_lookup[metric].line(series))
-            });
-
-        // outsource this operation to this function
-        updateDataValues();
-    }
-
-function reset_to_global(){
-          // Reselect global extent, update text
-            elected_country = "WLD";
-            d3.selectAll(".country-label").text("Global");
-            
-            // set all countries back to focus
-            map_svg.selectAll("path.country")
-              .style("opacity", 1)
-              .style("stroke", null);
-
-            // de-highlight all circles
-            svg.selectAll(".bubble circle")
-              .style("stroke", null)
-              .style("stroke-width", null);
-
-            // turn off displaying the bubble's text
-            svg.selectAll(".bubble text")
-              .style("display", "none");
-
-            // set the "d" attribute on the spark line to nothing
-            // *QQ* what's going on here?
-            d3.selectAll("path.spark")
-              .attr("d", "");
-
-            // hides the tooltip
-            tooltip.style("display", "none");
-
-            // uses the global selected_country variable to update
-            updateDataValues();
 }
+function update_map(){
+          // redraw the map to highlight the country being mousedover
+        map_svg.selectAll("path.country")
+          .style("opacity", function(p) {
+            //return p.properties.iso_a3 == String(+idLookup[selected_country]["country-code"]) ? 1 : 0.3;
+            return p.properties.iso_a3 == String(selected_country) ? 1 : 0.3;
 
-function kill_tooltip(){
-    // hides the tooltip
-    tooltip.style("display", "none");
-}
-function revive_tooltip(){
-    // hides the tooltip
-    tooltip.style("display", null);
+          })
+          .style("stroke", function(p) {
+            //return p.properties.iso_a3 == String(+idLookup[selected_country]["country-code"]) ? "#222" : null;
+            return p.properties.iso_a3 == String(selected_country) ? "#222" : null;
+          });
 }
 
 // End of actions following data import
