@@ -333,8 +333,8 @@ var map_svg = map_container
 
 map_container.append("text")
     .attr("x", 6)
-    .attr("y", -5)
-    .attr("class", "label country-label")
+    .attr("y", map_height + 6)
+    .attr("class", "label selected-country-label")
     .text("Selected country: " + selected_country)
 
 
@@ -348,7 +348,7 @@ map_container.append("a")
 d3.select("body")
   .append("h3")
   .attr("class", "country-label")
-  .text(function(d) { return "Global"; });
+  .text(function(d) { return "World"; });
 
 d3.select("body")
   .append("div")
@@ -1091,7 +1091,7 @@ d3.queue()
 function reset_to_global(){
           // Reselect global extent, update text
             selected_country = "WLD";
-            d3.selectAll(".country-label").text("Global");
+            d3.selectAll(".country-label").text("World");
 
             
             // set all countries back to focus
@@ -1139,6 +1139,7 @@ function update_labels(){
 
         country_name = lookup[selected_country].name
         d3.selectAll(".country-label").text(country_name); 
+        d3.selectAll(".selected-country-label").text("Selected country: " + selected_country); 
 
         // clear tooltip, change header name
         
