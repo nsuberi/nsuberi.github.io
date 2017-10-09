@@ -2,6 +2,7 @@
 var year = 2000;
 var active_metric = "CO2";
 var active_ymetric = "GDP";
+var chosen_country = null;
 
 var exclude = ["AFG", "COD", "LBY", "LCA", "LIE", "LSO", "MCO", "MDA", "NRU", "PRK", "ROU", "SMR", "SOM", "SSD", "SYR", "TLS", "TUV", "WLD"];
 
@@ -355,7 +356,7 @@ d3.queue()
 
 
     // set up xscale for plumb lines
-    // logic 
+    // logic for calculating extent, choosing preset if available
 
     var multiple_xscale = d3.scaleLinear().domain([2000,2015]).range([12, 168]);
     
@@ -372,6 +373,8 @@ d3.queue()
       var yscale = metric_lookup[metric].yscale = d3.scaleLinear().domain(extent).range([70,6]).clamp(true);
       metric_lookup[metric].scale = d3.scaleLinear().domain(extent).range([0,width]).clamp(true);
 
+      // draws the plumb line
+      // *QQ* and the yAxis? confused because don't see
       metric_lookup[metric].line = d3.line()
         .defined(function(d) { return d.value != "" && !isNaN(d.value); })
         .x(function(d) { return multiple_xscale(d.year); })
@@ -382,10 +385,14 @@ d3.queue()
         .scale(metric_lookup[metric].scale)
     });
 
+    // Create spark lines
+    // *QQ* not quite sure how spark lines are associated with metric_lookup[metric].line
+
     multiples.select("svg")
       .append("path")
       .attr("class", "spark")
 
+    // Create tracking lines & years
     multiples.select("svg")
       .append("line")
       .attr("class", "plumb")
@@ -405,21 +412,34 @@ d3.queue()
       .style("font-size", "12px")
       .text(2000)
 
+
+
+      // Starting to set up the Scatterplot
+      // grab countries, set axes and tick text location
+
+    // Grab all countries
     var countries = d3.keys(lookup);
 
+    // Draw X axis
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
       .attr("class", "x axis")
       .call(xAxis);
 
+    // Place text relative to the X axis
     svg.selectAll(".x.axis text")
       .attr("y", 8);
 
+    // Draw Y Axis
     svg.append("g")
       .attr("transform", "translate(0,0)")
       .attr("class", "y axis")
       .call(yAxis);
 
+    // *QQ* no placing .y.axis text?
+
+    // Drawing middle lines - xaxis and yaxis
+    // held constant on xscale(0) or yscale(0)
     svg
       .append("line")
       .attr("class", "dark-line-1")
@@ -440,39 +460,85 @@ d3.queue()
       .attr("y1", yscale(0))
       .attr("y2", yscale(0))
 
+      // TO DO
+      // Current implementation of clicked_country
+      // needs additional logic to stop actions in
+      // mouseover and mouseout if there is an active clicked_country
+      // EDIT
+      // Used if(clicked_country){return clicked_country} to shortcircuit
+
+
+    // draw bubbles
     var group = svg.selectAll("g.bubble")
       .data(countries.filter(function(d) { 
+        // only include those not in the exclude list
         return d && exclude.indexOf(d) == -1;
       }))
       .enter().append("g")
       .sort(function(a,b) {
+        // if function returns positive, b was bigger than a
+        // used for sorting, defaults to descending
+        // sort by absolute carbon amount
+        // https://stackoverflow.com/questions/15704128/how-can-i-efficiently-convert-data-from-string-to-int-within-a-d3-method-chain
+        // + converts a numeric string into a number
         return +lookup[b]["abs_carbon"][year].replace(",","") - (+lookup[a]["abs_carbon"][year].replace(",",""));
       })
       .attr("class", "bubble")
       .attr("transform", function(d) {
+        // scale x, y location by value of the x metric in a given year, in country d
         return "translate(" + xscale(+lookup[d][active_metric][year]) + "," + yscale(+lookup[d][active_ymetric][year]) + ")"
       });
 
     group
       .append("circle")
+      // the circle gets drawn here... above was only a reference
+      // to the center of a bubble element
       .attr("r", function(d) {
         return radius(+lookup[d]["abs_carbon"][year].replace(",",""));
       })
       .style("fill", function(d) {
         return "#777";
       })
+      // on click, announce name in console
       .on("click", function(d) {
+        clicked_country = d
         console.log(d); 
+
+        // TO DO 
+        // expand this function to set chosen_country
+        // same behavior as mouseover
+        // will persist until user clicks on another country
+        // or a background svg in front of everything as a click wall
+
       })
       .on("mouseover", function(d) {
+
+        // rename d as country for clarify
         var country = d;
+
+        // if country is explicitly excluded, or doesn't show up in lookup return gray
+        // lookup is built from all of the wb_data 
+        // *QQ* the second check may be unnecessary... will it ever be true?
         if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
         if (!(country in lookup)) { return "#eaeaea"; }
+
+        // Adding this as an attempt to shortcircuit mouseover behaviir
+        // if there is an active clicked_country
+        if (clicked_country) {return clicked_country}
+
+        // *QQ* The following code should only run if there was no active clicked_country
         selected_country = country;
+
+        // store data associated with this country
+        // must be in data load await() callback to ensure data is ready for this step
         var datum = lookup[country];
 
+        // change labels to be mousedover country's name
+        // *QQ* it seems like idLookup is being created below, after loading the map
+        // Why is this OK?
         d3.selectAll(".country-label").text(idLookup[d].name);
 
+        // redraw the map to highlight the country being mousedover
         map_svg.selectAll("path.country")
           .style("opacity", function(p) {
             return p.id == String(+idLookup[d]["country-code"]) ? 1 : 0.3;
@@ -481,10 +547,17 @@ d3.queue()
             return p.id == String(+idLookup[d]["country-code"]) ? "#222" : null;
           });
           
+        // Set text for tooltip
+
+        // TO DO - Done?
+        // cut down what gets displayed here to only be the x- and y-metric
+        // *QQ* is the addition below sufficient?
+
         tooltip.style("display", null).html("");
         tooltip.append("h3").text(idLookup[d].name);
         d3.keys(datum).forEach(function(metric) {
-          if (datum[metric][year]) {
+          // Added the && and || clause
+          if (datum[metric][year] && (metric == active_ymetric || metric == active_metric) ) {
             var div = tooltip.append("div");
             div.append("span").text(metric_lookup[metric].name + ": ");
             div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
@@ -492,11 +565,13 @@ d3.queue()
           }
         });
 
+        // uses the .raise() function to bring a point above others
         svg.selectAll(".bubble")
           .filter(function(p) {
             return country == p;
           })
           .raise();
+        // setting style of circle to show bold line around circumference
         svg.selectAll(".bubble circle")
           .style("stroke", function(p) {
             return country == p ? "#111" : null;
@@ -505,14 +580,34 @@ d3.queue()
             return country == p ? "2px" : null;
           });
 
-
+        // outsource this operation to this function
         updateDataValues();
       })
+      // Cause tooltip to follow mouse as user moves
       .on("mousemove", function(d) {
         return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
       })
+      // Right now, will trigger back to WLD
+
+      // TO DO
+      // consider how onclick, onmouseover, and onmouseout interact
+      // onclick (country): sets selected_country to chosen country
+      //// clicked_country = d
+
+      // onmouseover: sets selected_country to chosen country
+      //// selected_country = clicked_country || d
+      // onmouseout: sets selected_country back to WLD
+      //// selected_country = clicked_country || d
+      // onclick (canvas of scatterplot or map): sets selected_country back to WLD
+      //// clicked_country = null
+
       .on("mouseout", function() {
-        selected_country = "WLD";
+
+        // Attempt to short-circuit if there is an active clicked_country
+        if (clicked_country) { return clicked_country; }
+
+        // The following code should only run if there is no active clicked_country
+        selected_country = clicked_country || "WLD";
         d3.selectAll(".country-label").text("Global");
         map_svg.selectAll("path.country")
           .style("opacity", 1)
@@ -533,12 +628,14 @@ d3.queue()
         updateDataValues();
       })
 
+
+      // Label displaying which y-metric is active
     svg.append("text")
       .attr("x", 6)
       .attr("y", -5)
       .attr("class", "label active-ymetric-label")
       .text(metric_lookup[active_ymetric].name + " (" + metric_lookup[active_ymetric].units+ ")");
-
+      // Label displaying current years being shown
     var year_label = svg.append("text")
       .attr("x", width-2)
       .attr("y", -5)
@@ -547,7 +644,7 @@ d3.queue()
       .style("font-weight", "bold")
       .style("font-size", "36px")
       .text("1999-2000");
-
+      // Label showing which x-metric is active
     svg.append("text")
       .attr("x", width-2)
       .attr("y", height-6)
@@ -555,22 +652,44 @@ d3.queue()
       .attr("class", "label active-metric-label")
       .text(metric_lookup[active_metric].name + " (" + metric_lookup[active_ymetric].units+ ")");
 
+
+
     /* Map */
-    d3.json("../data/world-50m.json", function(error, world) {
+
+    // TO DO
+    // update this to reference the official WRI geojson map bounds
+    // check commands which use topojson...
+
+    // *QQ* Convert wri-bounds to topojson? 
+    // Does make them smaller, then don't have to chage the add code :)
+
+    d3.json("../data/all_primary_countries.json", function(error, world) {
       if (error) throw error;
 
+      // Experimental logs
+      console.log(world)
+      console.log(world.objects)
+      console.log(world.objects.countries)
+
       map_svg.selectAll("path.country")
-          .data(topojson.feature(world, world.objects.countries).features)
+        .data(topojson.feature(world, world.objects.countries).features)
+        // Try this!
+        // If it doesn't work... figure out how this wri-bounds json is passed 
+        // .data(world.iso_a3)
         .enter().append("path")
           .attr("class", "country")
           .attr("d", path);
 
+      // Create lat-lon mesh as background
       map_svg.insert("path", ".graticule")
           .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
           .attr("class", "boundary")
           .attr("d", path);
 
+
+      // After ensuring the map data has loaded, load the keys between map objects and data
       d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
+        // Are these two redundant?
         isoCodes.forEach(function(d) {
           isoLookup[String(+d["country-code"])] = d;
         });
@@ -578,6 +697,9 @@ d3.queue()
           idLookup[d["alpha-3"]] = d;
         });
 
+        // Set country name
+        // may have to change idLookup[d].name, depending on whether name
+        // was an attribute of the Stamen map objects
         group
           .append("text")
           .attr("y", -20)
@@ -588,6 +710,7 @@ d3.queue()
           })
           .style("display", "none");
 
+        //
         map_svg.selectAll("path.country")
           .style("fill", function(d) {
             if (!(d.id in isoLookup)) { return "#eaeaea"; }
@@ -597,16 +720,37 @@ d3.queue()
             var datum = lookup[country];
             //console.log(datum);
             if (datum[active_ymetric][year] == "") { return "#eaeaea" };
-            return colorMap(+datum["index_territorial"][year]) || "#eaeaea";
+
+            // TO DO
+            // Add logic here to change up which variable is used to color
+            var color_var = "index_territorial"
+
+            // TO DO
+            // condense color and colorMap functions into one
+            return colorMap(+datum[color_var][year]) || "#eaeaea";
+          })
+          .on("click", function(d){
+            clicked_country = d;
+
+            // TO DO
+            // write behavior setting selected country
+            // refactor into's it's own code that 
+            // gets used by click, mouseover, mouseout
+
           })
           .on("mouseover", function(d) {
             if (!(d.id in isoLookup)) { return "#eaeaea"; }
             var country = isoLookup[d.id]["alpha-3"];
             if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
             if (!(country in lookup)) { return "#eaeaea"; }
+
+            // Attempt to shortcircuit code below if there is an active clicked_country
+            if (clicked_country) { return clicked_country; }            
+
             selected_country = country;
             var datum = lookup[country];
 
+            // change tooltip text & other labels to reflect mousedover country
             d3.selectAll(".country-label").text(isoLookup[d.id].name);
             tooltip.style("display", null).html("");
             tooltip.append("h3").text(isoLookup[d.id].name);
@@ -619,6 +763,7 @@ d3.queue()
               }
             });
 
+            // Show selection of country on map
             map_svg.selectAll("path.country")
               .style("opacity", function(p) {
                 return p.id == d.id ? 1 : 0.3;
@@ -626,12 +771,16 @@ d3.queue()
               .style("stroke", function(p) {
                 return p.id == d.id ? "#222" : null;
               });
-          
+            // Show selected circle on the scatter plot
             var selected_bubble = svg.selectAll(".bubble")
               .filter(function(p) {
                 return country == p;
               })
               .raise();
+
+            // TO DO
+            // implement a re-sort of the scatter points so that the small
+            // points don't get covered by bigger ones which had been previously selected
 
             selected_bubble.select("circle")
               .style("stroke", "#111")
@@ -659,24 +808,36 @@ d3.queue()
             return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
           })
           .on("mouseout", function() {
+
+            // Attempt to shortcircuit code below if there is an active clicked_country
+            if (clicked_country) { return clicked_country; } 
+
             selected_country = "WLD";
             d3.selectAll(".country-label").text("Global");
+            
+            // set all countries back to focus
             map_svg.selectAll("path.country")
               .style("opacity", 1)
               .style("stroke", null);
 
+            // de-highlight all circles
             svg.selectAll(".bubble circle")
               .style("stroke", null)
               .style("stroke-width", null);
 
+            // turn off displaying the bubble's text
             svg.selectAll(".bubble text")
               .style("display", "none");
 
+            // set the "d" attribute on the spark line to nothing
+            // *QQ* what's going on here?
             d3.selectAll("path.spark")
               .attr("d", "");
 
+            // hides the tooltip
             tooltip.style("display", "none");
 
+            // uses the global selected_country variable to update
             updateDataValues();
           });
       });
@@ -939,6 +1100,12 @@ d3.queue()
         }
       });
     }
+
+    function update_chosen_region(region_name) {
+
+    }
+
+
 
 // End of actions following data import
   });
