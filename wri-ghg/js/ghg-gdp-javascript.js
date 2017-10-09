@@ -1202,7 +1202,9 @@ d3.queue()
           if (datum[active_ymetric][year] == "") { return "#eaeaea" };
         
         
-          return color(+datum["index_territorial"][year]) || "#eaeaea";
+        // Change which variable to use for coloring here
+        color_var = "index_territorial"
+          return color(+datum[color_var][year]) || "#eaeaea";
         })
     }
 
@@ -1213,6 +1215,8 @@ d3.queue()
     function updateDataValues() {
 
       var datum = lookup[selected_country];
+      console.log("just assigned")
+      console.log(datum)
 
       tooltip.selectAll("div").remove();
 
