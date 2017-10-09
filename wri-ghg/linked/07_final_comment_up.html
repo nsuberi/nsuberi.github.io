@@ -886,59 +886,6 @@ d3.queue()
             if (clicked_country) { return clicked_country; }            
             update_to_selected_region(clicked_country)
 
-            selected_country = country;
-            var datum = lookup[country];
-
-            // change tooltip text & other labels to reflect mousedover country
-            d3.selectAll(".country-label").text(isoLookup[d.id].name);
-            tooltip.style("display", null).html("");
-            tooltip.append("h3").text(isoLookup[d.id].name);
-            d3.keys(datum).forEach(function(metric) {
-              if (datum[metric][year]) {
-                var div = tooltip.append("div");
-                div.append("span").text(metric_lookup[metric].name + ": ");
-                div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
-                div.append("span").text(" " + metric_lookup[metric].units);
-              }
-            });
-
-            // Show selection of country on map
-            map_svg.selectAll("path.country")
-              .style("opacity", function(p) {
-                return p.id == d.id ? 1 : 0.3;
-              })
-              .style("stroke", function(p) {
-                return p.id == d.id ? "#222" : null;
-              });
-            // Show selected circle on the scatter plot
-            var selected_bubble = svg.selectAll(".bubble")
-              .filter(function(p) {
-                return country == p;
-              })
-              .raise();
-
-
-            selected_bubble.select("circle")
-              .style("stroke", "#111")
-              .style("stroke-width", "2px");
-
-            selected_bubble.select("text")
-              .style("display", null);
-
-            multiples.each(function(metric) {
-              var series = [];
-              d3.range(2000,2016).forEach(function(year) {
-                series.push({
-                  year: +year,
-                  value: +datum[metric][year]
-                })
-              });
-              d3.select(this)
-                .select("path.spark")
-                .attr("d", metric_lookup[metric].line(series))
-            });
-
-            updateDataValues();
           })
           .on("mousemove", function(d) {
             return tooltip.style("top", (d3.event.pageY-52) + "px").style("left", (d3.event.pageX+18) + "px");
