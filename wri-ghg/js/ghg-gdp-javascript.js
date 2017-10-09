@@ -243,17 +243,6 @@ d3.select("body")
   .attr("class", "country-label")
   .text(function(d) { return "Global"; });
 
-// Background svg??
-// Not sure what this does
-// Originally lines 310-315
-
-var svg = d3.select("body")
-  .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 
 //
 // Create map_container
@@ -509,9 +498,87 @@ map_svg.append("path")
 
 // Create bubbles, sort them according to which has more abs_carbon
 
+
+// Create scatterplot area
+
+var scatter_canvas = d3.select("body")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+
+// Creates x-axis, y-axis
+    scatter_canvas.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .attr("class", "x axis")
+      .call(xAxis);
+
+    scatter_canvas.selectAll(".x.axis text")
+      .attr("y", 8);
+
+    scatter_canvas.append("g")
+      .attr("transform", "translate(0,0)")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+// Dark lines that reference 0,0
+    scatter_canvas
+      .append("line")
+      .attr("class", "dark-line-1")
+      .style("stroke", "#777")
+      .style("stroke-width", 1)
+      .attr("x1", xscale(0))
+      .attr("x2", xscale(0))
+      .attr("y1", 0)
+      .attr("y2", height)
+
+    scatter_canvas
+      .append("line")
+      .attr("class", "dark-line-2")
+      .style("stroke", "#777")
+      .style("stroke-width", 1)
+      .attr("x1", 0)
+      .attr("x2", width)
+      .attr("y1", yscale(0))
+      .attr("y2", yscale(0))
+
+
+  
+  // Create label for active y-metric
+    scatter_canvas.append("text")
+      .attr("x", 6)
+      .attr("y", -5)
+      .attr("class", "label active-ymetric-label")
+      .text(metric_lookup[active_ymetric].name + " (" + metric_lookup[active_ymetric].units+ ")");
+
+  // Create label for active x-metric
+    scatter_canvas.append("text")
+      .attr("x", width-2)
+      .attr("y", height-6)
+      .attr("text-anchor", "end")
+      .attr("class", "label active-metric-label")
+      .text(metric_lookup[active_metric].name + " (" + metric_lookup[active_ymetric].units+ ")");
+
+  // Create label for current year
+    var year_label = scatter_canvas.append("text")
+      .attr("x", width-2)
+      .attr("y", -5)
+      .attr("class", "label")
+      .attr("text-anchor", "end")
+      .style("font-weight", "bold")
+      .style("font-size", "36px")
+      .text("1999-2000");
+
+
+
+
     var countries = d3.keys(lookup);
 
-    var group = svg.selectAll("g.bubble")
+    var group = scatter_canvas.selectAll("g.bubble")
       .data(countries.filter(function(d) {
         return d && exclude.indexOf(d) == -1;
       }))
@@ -579,12 +646,12 @@ map_svg.append("path")
         });
 
       
-        svg.selectAll(".bubble")
+        scatter_canvas.selectAll(".bubble")
           .filter(function(p) {
             return country == p;
           })
           .raise();
-        svg.selectAll(".bubble circle")
+        scatter_canvas.selectAll(".bubble circle")
           .style("stroke", function(p) {
             return country == p ? "#111" : null;
           })
@@ -604,7 +671,7 @@ map_svg.append("path")
         map_svg.selectAll("path.country")
           .style("opacity", 1)
           .style("stroke", null);
-        svg.selectAll(".bubble circle")
+        scatter_canvas.selectAll(".bubble circle")
           .style("stroke", function(p) {
             return null;
           })
@@ -894,65 +961,6 @@ d3.queue()
 
 
 
-// Creates x-axis, y-axis
-    svg.append("g")
-      .attr("transform", "translate(0," + height + ")")
-      .attr("class", "x axis")
-      .call(xAxis);
-
-    svg.selectAll(".x.axis text")
-      .attr("y", 8);
-
-    svg.append("g")
-      .attr("transform", "translate(0,0)")
-      .attr("class", "y axis")
-      .call(yAxis);
-
-    svg
-      .append("line")
-      .attr("class", "dark-line-1")
-      .style("stroke", "#777")
-      .style("stroke-width", 1)
-      .attr("x1", xscale(0))
-      .attr("x2", xscale(0))
-      .attr("y1", 0)
-      .attr("y2", height)
-
-    svg
-      .append("line")
-      .attr("class", "dark-line-2")
-      .style("stroke", "#777")
-      .style("stroke-width", 1)
-      .attr("x1", 0)
-      .attr("x2", width)
-      .attr("y1", yscale(0))
-      .attr("y2", yscale(0))
-
-  
-  // Create label for active y-metric
-    svg.append("text")
-      .attr("x", 6)
-      .attr("y", -5)
-      .attr("class", "label active-ymetric-label")
-      .text(metric_lookup[active_ymetric].name + " (" + metric_lookup[active_ymetric].units+ ")");
-
-  // Create label for active x-metric
-    svg.append("text")
-      .attr("x", width-2)
-      .attr("y", height-6)
-      .attr("text-anchor", "end")
-      .attr("class", "label active-metric-label")
-      .text(metric_lookup[active_metric].name + " (" + metric_lookup[active_ymetric].units+ ")");
-
-  // Create label for current year
-    var year_label = svg.append("text")
-      .attr("x", width-2)
-      .attr("y", -5)
-      .attr("class", "label")
-      .attr("text-anchor", "end")
-      .style("font-weight", "bold")
-      .style("font-size", "36px")
-      .text("1999-2000");
 
   
   
@@ -1037,7 +1045,7 @@ d3.queue()
         .tickFormat(metric_lookup[metric].format)
         .scale(xscale);
 
-      svg.select(".x.axis")
+      scatter_canvas.select(".x.axis")
         .transition()
         .call(xAxis);
 
@@ -1046,7 +1054,7 @@ d3.queue()
         .attr("x1", xscale(0))
         .attr("x2", xscale(0))
 
-      svg.selectAll(".x.axis text")
+      scatter_canvas.selectAll(".x.axis text")
         .transition()
         .attr("y", 8);
     };
@@ -1069,7 +1077,7 @@ d3.queue()
         .tickSize(-width)
         .scale(yscale)
 
-      svg.select(".y.axis")
+      scatter_canvas.select(".y.axis")
         .transition()
         .call(yAxis);
 
@@ -1140,7 +1148,7 @@ d3.queue()
   // both_exist refers to previous timestep and following time step's data
   //
     function updateBubbles() {
-      svg.selectAll("g.bubble")
+      scatter_canvas.selectAll("g.bubble")
         .transition()
         .duration(700)
       // set destination opacity depending on whether the point should stay displayed
@@ -1181,7 +1189,7 @@ d3.queue()
 
       // change radius
       // change color of fill
-      svg.selectAll("g.bubble circle")
+      scatter_canvas.selectAll("g.bubble circle")
         .transition()
         .duration(700)
         .attr("r", function(d) {
