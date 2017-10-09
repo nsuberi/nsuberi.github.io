@@ -1178,17 +1178,16 @@ d3.queue()
         console.log("Active metrics:")
         console.log(active_metric)
         console.log(active_ymetric)
-        console.log("Stored metrics")
+        print("Should be true twice:")
         d3.keys(datum).forEach(function(metric) {
-          console.log(metric)
-          console.log((metric == active_ymetric) || (metric == active_metric))
+
           // TO DO 
           // Get this working, how to compare active metric
           // Added the && and || clause
-
-
-
+          
+          print((datum[metric][year] && ((metric == active_ymetric) || (metric == active_metric)) ))
           if (datum[metric][year] && ((metric == active_ymetric) || (metric == active_metric)) ) {
+            console.log("appending to tooltip")
             var div = tooltip.append("div");
             div.append("span").text(metric_lookup[metric].name + ": ");
             div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
