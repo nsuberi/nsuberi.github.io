@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test18--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test19--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -328,16 +328,15 @@ var map_container = d3.select("body")
 
 // Put selected region indicator at top of map
 map_container.append("label")
+.text("If checked, mouseover locked")
 .append("input")
 .attr("type", "checkbox")
-.attr("class", "region_cb")
-.attr("value", "World")
+.attr("class", "mouseover_checkbox")
 .attr("x", map_width - 2)
 .attr("y", 6)
 .style("text-anchor", "end")
-.text("If checked, mouseover locked")
 
-d3.selectAll(".region_cb")
+d3.selectAll(".mouseover_checkbox")
 .on("change", function () { 
     if(this.checked){
       clicked_country = selected_country;
@@ -686,8 +685,8 @@ d3.queue()
       })
       .on("click", function(d) {
         clicked_country = d
-        d3.selectAll(".region_cb")
-        .attr("clicked", "clicked")
+        d3.selectAll(".mouseover_checkbox")
+        .attr("checked", "checked")
 
         update_to_selected_region(clicked_country);
       })
@@ -806,8 +805,8 @@ d3.queue()
           })
           .on("click", function(d){
             clicked_country = d.properties.iso_a3;
-            d3.selectAll(".region_cb")
-              .attr("clicked", "clicked")
+            d3.selectAll(".mouseover_checkbox")
+             .attr("checked", "checked")
 
             reset_to_global();
             update_to_selected_region(clicked_country)
