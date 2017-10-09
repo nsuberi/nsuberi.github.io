@@ -1132,9 +1132,10 @@ d3.queue()
         // *QQ* The following code should only run if there was no active clicked_country
         selected_country = region_name;
         console.log("Update to selected region")
+        console.log("Selected region:")
         console.log(selected_country)
-        console.log(idLookup[String(selected_country)].name)
-        console.log(idLookup[selected_country].name)
+        console.log("idLookup:")
+        console.log(idLookup[selected_country])
 
         // store data associated with this country
         // must be in data load await() callback to ensure data is ready for this step
