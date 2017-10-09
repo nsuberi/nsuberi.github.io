@@ -1,138 +1,4 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-<link rel="stylesheet" href="https://use.typekit.net/ezo4zbn.css">
-<style type="text/css">
-body {
-  margin: 20px;
-  font-family: acumin-pro-condensed, arial, sans;
-  line-height: 1.3em;
-  width: 1180px;
-}
 
-h3 {
-  margin: 0 0 4px 4px;
-  line-height: 1.05em;
-}
-
-.label {
-  font-size: 18px;
-}
-
-.legend{
-  opacity: 1;
-  transition: opacity 0.3s;
-}
-
-.axis text {
-  font-size: 14px;
-  fill: #333;
-}
-
-.axis path,
-.axis line {
-  fill: none;
-  stroke-width:1px;
-  stroke: #e7e7e7;
-}
-
-circle {
-  stroke: #fff;
-  stroke-width: 1px;
-  opacity: 0.8;
-}
-
-.bubble {
-  opacity: 1;
-  transition: opacity 0.3s;
-}
-
-path.country {
-  opacity: 1;
-  transition: opacity 0.3s;
-}
-
-.stroke {
-  fill: none;
-  stroke: #bbb;
-  stroke-width: 2px;
-}
-
-.fill {
-  fill: #fff;
-}
-
-.graticule {
-  fill: none;
-  stroke: #777;
-  stroke-width: 0.5px;
-  stroke-opacity: 0.5;
-}
-
-.land {
-  fill: #ddd;
-}
-
-.boundary {
-  fill: none;
-  stroke: #fff;
-  stroke-width: 0.5px;
-}
-#tooltip {
-  width: 480px;
-  padding: 6px 12px;
-}
-#tooltip h3 {
-  margin: 0 0 12px 0;
-}
-
-.multiple {
-  width: 180px;
-  height: 120px;
-  float: left;
-  position: relative;
-  background: #fcfcfc;
-  border: 1px solid #d0d0d0;
-  margin: 4px;
-  cursor: pointer;
-}
-
-.multiple h3 {
-  position: relative;
-  font-size: 16px;
-  width: 180px;
-  z-index: 5;
-  margin: 1px 0 0 5px;
-}
-
-.multiple svg {
-  position: absolute;
-  top: 40px;
-  z-index: 4;
-}
-
-.multiple path.spark {
-  stroke-width: 2px;
-  stroke: #7D0063;
-  fill: none;
-}
-
-#year-slider {
-  margin: 0 0px 0 0;
-}
-</style>
-<body>
-<h1>Exploring Country-level GHG-GDP Divergence</h1>
-<div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
-  Time Range &nbsp;
-  <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
-</div><br/>
-<div id="tooltip" style="display: none; position: absolute; z-index: 100; pointer-events: none; background: rgba(255,255,255,0.8); border: 2px solid #d0d0d0;">
-</div>
-</body>
-<script src="//d3js.org/d3.v4.js"></script>
-<script src="https://unpkg.com/topojson-client@3"></script>
-<script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
-<script>
 var year = 2000;
 var active_metric = "CO2";
 var active_ymetric = "GDP";
@@ -434,6 +300,10 @@ map_svg.append("path")
     .attr("class", "graticule")
     .attr("d", path);
 
+
+
+// The rest of the code follows this function call
+// which ensures the data is loaded before graphing it
 d3.queue()
   .defer(d3.csv, "../final-data/GDP\ annual\ change\ 2000-15\ 9.28.17.csv")
   .defer(d3.csv, "../final-data/CO2 annual change data 2000-2015 9.18.17.csv")
@@ -443,9 +313,9 @@ d3.queue()
   .defer(d3.csv, "../final-data/consumption\ CO2\ annual\ change\ data\ 2000-2015\ 9.28.17.csv")
   .defer(d3.csv, "../data/Index\ calculated\ with\ Territorial\ Emissions\ and\ GDP.csv")
   .await(function(error, raw_gdp, raw_co2, wb_data, abs_gdp, abs_carbon, consumption_co2, index_territorial) {
-    //console.log(d3.keys(wb_data[0]));
-    //console.log(consumption_co2);
-    //console.log(index_territorial);
+
+
+    // Fill in lookup table
 
     raw_gdp.forEach(function(d) {
       lookup[d["ISO"]] = lookup[d["ISO"]] || {};
@@ -482,12 +352,23 @@ d3.queue()
       });
     });
 
+
+
+    // set up xscale for plumb lines
+    // logic 
+
     var multiple_xscale = d3.scaleLinear().domain([2000,2015]).range([12, 168]);
+    
     metrics.forEach(function(metric) {
       var calculated_extent = d3.extent(wb_data.filter(function(d) { return d.year.indexOf("-") < 0 && d.country_code !== "WLD"; }), function(d) { return +d[metric]; })
       var calculated_long_extent = d3.extent(wb_data.filter(function(d) { return d.year.indexOf("-") > -1 && d.country_code !== "WLD"; }), function(d) { return +d[metric]; })
+      
+      // perhaps, won't need longextent? so don't set it as it's own variable?
+      // preset is the default, if it is not present, will use the calcualted extent / long_extent
       var extent = metric_lookup[metric].extent = metric_lookup[metric].extent || calculated_extent;
       metric_lookup[metric].longextent = metric_lookup[metric].longextent || calculated_long_extent;
+      
+
       var yscale = metric_lookup[metric].yscale = d3.scaleLinear().domain(extent).range([70,6]).clamp(true);
       metric_lookup[metric].scale = d3.scaleLinear().domain(extent).range([0,width]).clamp(true);
 
@@ -500,17 +381,6 @@ d3.queue()
         .tickSize(-200)
         .scale(metric_lookup[metric].scale)
     });
-
-    /*
-    multiples.select("svg")
-      .append("g")
-      .attr("transform", "translate(100,0)")
-      .attr("class", "y axis")
-      .each(function(d) {
-        d3.select(this)
-          .call(metric_lookup[d].yAxis);
-      });
-      */
 
     multiples.select("svg")
       .append("path")
@@ -1070,5 +940,6 @@ d3.queue()
       });
     }
 
+// End of actions following data import
   });
-</script>
+
