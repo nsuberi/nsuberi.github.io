@@ -799,7 +799,10 @@ d3.queue()
             console.log(d.id)
 
             if (!(d.id in isoLookup)) { return "#eaeaea"; }
-            var country = isoLookup[d.id]["alpha-3"];
+
+            //var country = isoLookup[d.id]["alpha-3"];
+            var country = d.properties.iso_a3
+
             if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
             if (!(country in lookup)) { return "#eaeaea"; }
             var datum = lookup[country];
@@ -825,8 +828,11 @@ d3.queue()
             if (clicked_country) { 
               return clicked_country; 
             } else {
-              if (!(d.id in isoLookup)) { return "#eaeaea"; }
-              var country = isoLookup[d.id]["alpha-3"];
+
+              var country = d.properties.iso_a3
+
+              //if (!(d.id in isoLookup)) { return "#eaeaea"; }
+              //var country = isoLookup[d.id]["alpha-3"];
               if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
               if (!(country in lookup)) { return "#eaeaea"; }
 
@@ -1068,8 +1074,12 @@ d3.queue()
       map_svg.selectAll("path.country")
         .transition(700)
         .style("fill", function(d) {
-          if (!(d.id in isoLookup)) { return "#eaeaea"; }
-          var country = isoLookup[d.id]["alpha-3"];
+
+          var country = d.properties.iso_a3
+
+          //if (!(d.id in isoLookup)) { return "#eaeaea"; }
+          //var country = isoLookup[d.id]["alpha-3"];
+          
           if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
           if (!(country in lookup)) { return "#eaeaea"; }
           var datum = lookup[country];
