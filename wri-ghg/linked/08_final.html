@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test24--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test25--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -455,6 +455,9 @@ var yscale = d3.scaleLinear()
   .range([height,0])
   .clamp("true");
 
+
+var multiple_xscale = d3.scaleLinear().domain([2000,2015]).range([12, 168]);
+
 var radius = d3.scaleSqrt()
   .range([2.5,20])
   .domain([0, 3000]);
@@ -592,7 +595,7 @@ d3.queue()
     // set up xscale for plumb lines
     // logic for calculating extent, choosing preset if available
 
-    var multiple_xscale = d3.scaleLinear().domain([2000,2015]).range([12, 168]);
+
     
     metrics.forEach(function(metric) {
       var calculated_extent = d3.extent(wb_data.filter(function(d) { return d.year.indexOf("-") < 0 && d.country_code !== "WLD"; }), function(d) { return +d[metric]; })
