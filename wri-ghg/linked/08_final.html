@@ -121,13 +121,16 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test25--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test26--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
+  Autoplay? &nbsp;
+  <input type="checkbox" class="playing_checkbox" style="width: 200px">
+  Mouseover lock? &nbsp;
+  <input type="checkbox" class="mouseover_checkbox" style="width: 200px">
+
 </div><br/>
-<div id="tooltip" style="display: none; position: absolute; z-index: 100; pointer-events: none; background: rgba(255,255,255,0.8); border: 2px solid #d0d0d0;">
-</div>
 </body>
 <script src="https://d3js.org/d3.v4.js"></script>
 <script src="https://unpkg.com/topojson-client@3"></script>
@@ -366,27 +369,6 @@ var map_container = d3.select("body")
     .style("position", "relative")
     .style("display", "inline-block");
 
-// Put selected region indicator at top of map
-map_container.append("label")
-.text("If checked, mouseover locked")
-.append("input")
-.attr("type", "checkbox")
-.attr("class", "mouseover_checkbox")
-.property("checked", false)
-.attr("x", map_width - 2)
-.attr("y", 6)
-.style("text-anchor", "end")
-
-map_container.append("label")
-.text("If checked, playing forward")
-.append("input")
-.attr("type", "checkbox")
-.attr("class", "playing_checkbox")
-.property("checked", true)
-.attr("x", map_width - 2)
-.attr("y", 6)
-.style("text-anchor", "end")
-
 d3.selectAll(".mouseover_checkbox")
 .on("change", function () { 
     if(this.checked){
@@ -396,7 +378,7 @@ d3.selectAll(".mouseover_checkbox")
     }
 });
 
-d3.selectAll(".playing_checkbox")
+d3.selectAll(".autoplay_checkbox")
 .on("change", function () { 
     if(this.checked){
       playing = true;
@@ -868,7 +850,7 @@ d3.queue()
     // *QQ* May have to move this up
     d3.select("#year-slider")
       .on("input", function() {
-        playing = false;
+        //playing = false;
         year = this.value;
         if (year == 2016) {
           if (active_metric == "consumption_co2") {
