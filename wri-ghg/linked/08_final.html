@@ -824,7 +824,7 @@ d3.queue()
             return colorMap(+datum[color_var][year]) || "#eaeaea";
           })
           .on("click", function(d){
-            clicked_country = d;
+            clicked_country = d.properties.iso_a3;
 
             // need to reset to clear styles, then select anew
             reset_to_global();
