@@ -870,22 +870,22 @@ d3.queue()
       setTimeout(nextYear, 1100);
     };
 
-    function updateXMetric(metric) {
-      d3.selectAll(".active-metric-label").text(metric_lookup[metric].name);
-      d3.selectAll(".active-metric-label-value").text();
+    function updateXMetric(active_metric) {
+      d3.selectAll(".active-metric-label").text(metric_lookup[active_metric].name);
+      d3.selectAll(".active-metric-label-value").text(metric_lookup[active_metric].format(+datum[active_metric][year]) + " " + metric_lookup[active_metric].units);
 
-      xscale = metric_lookup[metric].scale;
+      xscale = metric_lookup[active_metric].scale;
 
       // for 2000-2015 year ranges
-      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[metric]) {
-        xscale.domain(metric_lookup[metric].longextent);
+      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[active_metric]) {
+        xscale.domain(metric_lookup[active_metric].longextent);
       } else {
-        xscale.domain(metric_lookup[metric].extent);
+        xscale.domain(metric_lookup[active_metric].extent);
       }
 
       var xAxis = d3.axisBottom()
         .tickSize(-height)
-        .tickFormat(metric_lookup[metric].format)
+        .tickFormat(metric_lookup[active_metric].format)
         .scale(xscale);
 
       svg.select(".x.axis")
@@ -902,21 +902,20 @@ d3.queue()
         .attr("y", 8);
     };
 
-    function updateYMetric(metric) {
-      active_ymetric = metric;
+    function updateYMetric(active_ymetric) {
 
-      d3.selectAll(".active-ymetric-label").text(metric_lookup[metric].name);
-      d3.selectAll(".active-ymetric-label-value").text();
+      d3.selectAll(".active-ymetric-label").text(metric_lookup[active_ymetric].name);
+      d3.selectAll(".active-ymetric-label-value").text(metric_lookup[active_ymetric].format(+datum[active_ymetric][year]) + " " + metric_lookup[active_ymetric].units);
 
       // for 2000-2015 year ranges
-      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[metric]) {
-        yscale.domain(metric_lookup[metric].longextent);
+      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[active_ymetric]) {
+        yscale.domain(metric_lookup[active_ymetric].longextent);
       } else {
-        yscale.domain(metric_lookup[metric].extent);
+        yscale.domain(metric_lookup[active_ymetric].extent);
       }
 
       var yAxis = d3.axisLeft()
-         .tickFormat(metric_lookup[metric].format)
+         .tickFormat(metric_lookup[active_ymetric].format)
         .tickSize(-width)
         .scale(yscale)
 
