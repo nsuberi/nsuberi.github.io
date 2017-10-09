@@ -734,30 +734,30 @@ d3.queue()
 
     // stamen's: world-50m.json
     // wri's: wri-bounds-topo.json
-    d3.json("../data/world-50m.json", function(error, world) {
+    // wri's: all_primary_countries.json
+    d3.json("../data/all_primary_countries.json", function(error, world) {
       if (error) throw error;
 
       // Experimental logs
       console.log(world)
-      console.log(world.objects)
-      console.log(world.objects.countries)
-      console.log(topojson.feature(world, world.objects.countries).features)
+      console.log(world.features)
+      //console.log(world.objects.countries)
+      //console.log(topojson.feature(world, world.objects.countries).features)
 
       map_svg.selectAll("path.country")
-        .data(topojson.feature(world, world.objects.countries).features)
-        // Try this!
-        // If it doesn't work... figure out how this wri-bounds json is passed 
-        // .data(world.iso_a3)
+        //.data(topojson.feature(world, world.objects.countries).features)
+        .data(world.features)
         .enter().append("path")
           .attr("class", "country")
           .attr("d", path);
 
       // Create lat-lon mesh as background
+      /*
       map_svg.insert("path", ".graticule")
           .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
           .attr("class", "boundary")
           .attr("d", path);
-
+      */
 
       // After ensuring the map data has loaded, load the keys between map objects and data
       d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
@@ -778,6 +778,8 @@ d3.queue()
         // Set country name
         // may have to change idLookup[d].name, depending on whether name
         // was an attribute of the Stamen map objects
+
+        // *QQ* WHAT IS THIS GROUP CODE DOING DOWN HERE?
         group
           .append("text")
           .attr("y", -20)
@@ -791,6 +793,11 @@ d3.queue()
         //
         map_svg.selectAll("path.country")
           .style("fill", function(d) {
+
+
+            console.log(d)
+            console.log(d.id)
+
             if (!(d.id in isoLookup)) { return "#eaeaea"; }
             var country = isoLookup[d.id]["alpha-3"];
             if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
