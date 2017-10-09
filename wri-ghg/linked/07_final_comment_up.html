@@ -640,6 +640,7 @@ d3.queue()
       .on("click", function(d) {
         clicked_country = d
         console.log(d); 
+        update_to_selected_region(clicked_country)
 
         // TO DO 
         // expand this function to set chosen_country
@@ -827,6 +828,10 @@ d3.queue()
 
       // After ensuring the map data has loaded, load the keys between map objects and data
       d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
+        
+        // TO DO
+        // investigate how this works as a key between the map and the wb data
+
         // Are these two redundant?
         isoCodes.forEach(function(d) {
           isoLookup[String(+d["country-code"])] = d;
@@ -834,6 +839,8 @@ d3.queue()
         isoCodes.forEach(function(d) {
           idLookup[d["alpha-3"]] = d;
         });
+
+
 
         // Set country name
         // may have to change idLookup[d].name, depending on whether name
