@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test6--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test7--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -858,10 +858,7 @@ d3.queue()
 
           });
 
-        // Set year and cue playforward at end of map load
-        setYear(2000);
-        setTimeout(nextYear, 1100);
-        console.log("set year and cued nextYear")
+
         // End country data load logic
       });
 
@@ -883,7 +880,12 @@ d3.queue()
         }
         setYear(year);
       });
+      // Set year and cue playforward at end of map load
       console.log("set behavior for time slider")
+      setYear(2000);
+      setTimeout(nextYear, 1100);
+      console.log("set year and cued nextYear")
+      
 
     // define click-on-wb-indicator behavior
     d3.selectAll(".multiple")
