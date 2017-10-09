@@ -1178,14 +1178,19 @@ d3.queue()
             // points don't get covered by bigger ones which had been previously selected
 
 
-        // setting style of circle to show bold line around circumference
-        svg.selectAll(".bubble circle")
-          .style("stroke", function(p) {
-            return selected_country == p ? "#111" : null;
-          })
-          .style("stroke-width", function(p) {
-            return selected_country == p ? "2px" : null;
-          });
+        // setting style of circle to show bold line around circumference, display country name text
+            var selected_bubble = svg.selectAll(".bubble")
+              .filter(function(p) {
+                return selected_country == p;
+              })
+              .raise();
+
+            selected_bubble.select("circle")
+              .style("stroke", "#111")
+              .style("stroke-width", "2px");
+
+            selected_bubble.select("text")
+              .style("display", null);
 
         // update wb indicators
         multiples.each(function(metric) {
