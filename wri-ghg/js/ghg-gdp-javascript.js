@@ -885,7 +885,7 @@ d3.queue()
           .call(metric_lookup[d].yAxis);
       });
       */
-
+}
   
   
   
