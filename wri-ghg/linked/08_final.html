@@ -1131,18 +1131,18 @@ d3.queue()
     function update_to_selected_region(region_name, mouse_on_map) {
         // *QQ* The following code should only run if there was no active clicked_country
         selected_country = region_name;
-        console.log("Update to selected region")
         console.log("Selected region:")
         console.log(selected_country)
-        console.log("idLookup:")
-        console.log(idLookup[selected_country])
+        console.log("Country info:")
+        country_info = idLookup[selected_country]
+        console.log(country_info)
 
         // store data associated with this country
         // must be in data load await() callback to ensure data is ready for this step
         var datum = lookup[selected_country];
 
         // change labels to be mousedover country's name
-        d3.selectAll(".country-label").text(idLookup[String(selected_country)].name);
+        d3.selectAll(".country-label").text(country_info.name);
 
         // redraw the map to highlight the country being mousedover
         map_svg.selectAll("path.country")
@@ -1163,7 +1163,7 @@ d3.queue()
         // *QQ* is the addition below sufficient?
 
         tooltip.style("display", null).html("");
-        tooltip.append("h3").text(idLookup[selected_country].name);
+        tooltip.append("h3").text(country_info.name);
         d3.keys(datum).forEach(function(metric) {
           // Added the && and || clause
           if (datum[metric][year] && (metric == active_ymetric || metric == active_metric) ) {
