@@ -215,6 +215,57 @@ var metric_lookup = {
   }
 }
 
+//
+// Set up scales
+//
+
+// Set scale for sizing dots
+var radius = d3.scaleSqrt()
+  .range([2.5,20])
+  .domain([0, 3000]);
+
+// Color scale
+// Q *** perhaps this should update as the variable used for the color ramp changes?
+var color = d3.scaleThreshold()
+  .domain([-0.05, 0, 0.5, 0.75, 1])
+  .range(["#d73027","#f46d43","#fdae61","#abd9e9","#74add1","#4575b4"]);
+
+// placing points on x and y axes
+// why are domains of the scales set to -0.5 to 0.5?
+var xscale = d3.scaleLinear()
+  .domain([-0.5,0.5])
+  .range([0,width])
+  .clamp("true");
+
+var yscale = d3.scaleLinear()
+  .domain([-0.5,0.5])
+  .range([height,0])
+  .clamp("true");
+
+
+//
+// Aux formatting function
+//
+
+// Create x- and y-axis lines
+// Use formatter (format)
+var xAxis = d3.axisBottom()
+  .tickSize(-height)
+  .tickFormat(function(d) {
+//    if (d == -0.25) return "<" + format(d);
+//    if (d == 0.25) return ">" + format(d);
+    return format(d);
+  })
+  .scale(xscale);
+
+var yAxis = d3.axisLeft()
+  .tickFormat(function(d) {
+//    if (d == 0) { return "N/A"; }
+    return format(d);
+  })
+  .tickSize(-width)
+  .scale(yscale)
+
 
 
 
@@ -689,53 +740,6 @@ var scatter_canvas = d3.select("body")
 
   
 
-
-
-// Set scale for sizing dots
-var radius = d3.scaleSqrt()
-  .range([2.5,20])
-  .domain([0, 3000]);
-
-// Set the domain to be reasonable for both map and scatter
-// Q *** perhaps this should update as the variable used for the color ramp changes?
-var color = d3.scaleThreshold()
-  .domain([-0.05, 0, 0.5, 0.75, 1])
-  .range(["#d73027","#f46d43","#fdae61","#abd9e9","#74add1","#4575b4"]);
-
-
-
-// Set up scales
-
-// why are domains of the scales set to -0.5 to 0.5?
-var xscale = d3.scaleLinear()
-  .domain([-0.5,0.5])
-  .range([0,width])
-  .clamp("true");
-
-var yscale = d3.scaleLinear()
-  .domain([-0.5,0.5])
-  .range([height,0])
-  .clamp("true");
-
-
-// Create x- and y-axis lines
-// Use formatter (format)
-var xAxis = d3.axisBottom()
-  .tickSize(-height)
-  .tickFormat(function(d) {
-//    if (d == -0.25) return "<" + format(d);
-//    if (d == 0.25) return ">" + format(d);
-    return format(d);
-  })
-  .scale(xscale);
-
-var yAxis = d3.axisLeft()
-  .tickFormat(function(d) {
-//    if (d == 0) { return "N/A"; }
-    return format(d);
-  })
-  .tickSize(-width)
-  .scale(yscale)
 
 
 
