@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test17--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test18--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -327,12 +327,24 @@ var map_container = d3.select("body")
     .style("display", "inline-block");
 
 // Put selected region indicator at top of map
-map_container.append("text")
-    .attr("x", map_width / 2)
-    .attr("y", 6)
-    .style("text-anchor", "middle")
-    .attr("class", "country-label selected-country-label")
-    .text("Selected Region: World")
+map_container.append("label")
+.append("input")
+.attr("type", "checkbox")
+.attr("class", "region_cb")
+.attr("value", "World")
+.attr("x", map_width - 2)
+.attr("y", 6)
+.style("text-anchor", "end")
+.text("If checked, mouseover locked")
+
+d3.selectAll(".region_cb")
+.on("change", function () { 
+    if(this.checked){
+      clicked_country = selected_country;
+    } else {
+      clicked_country = null;
+    }
+});
 
 var map_svg = map_container
   .append("svg")
@@ -674,6 +686,9 @@ d3.queue()
       })
       .on("click", function(d) {
         clicked_country = d
+        d3.selectAll(".region_cb")
+        .attr("clicked", "clicked")
+
         reset_to_global();
         update_to_selected_region(clicked_country, show_scatter_name=true);
       })
@@ -792,6 +807,9 @@ d3.queue()
           })
           .on("click", function(d){
             clicked_country = d.properties.iso_a3;
+            d3.selectAll(".region_cb")
+              .attr("clicked", "clicked")
+
             reset_to_global();
             update_to_selected_region(clicked_country, show_scatter_name=true)
           })
@@ -1171,10 +1189,7 @@ function update_labels(){
             } else {
               // is equal to active_ymetric
               // Update value next to the y-axis label
-              d3.select(".active-ymetric-label").
-              text(metric_lookup[metric].name + ": ") 
-              d3.select(".active-ymetric-label-value")
-              .text(metric_lookup[metric].format(+datum[metric][year]) + " " + metric_lookup[metric].units);
+              d3.selectAll(".active-ymetric-label").text(metric_lookup[active_ymetric].name + ": " + metric_lookup[active_ymetric].format(+datum[active_ymetric][year]) + " " + metric_lookup[active_ymetric].units);
             }
 
           }
