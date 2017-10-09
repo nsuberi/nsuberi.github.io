@@ -1184,8 +1184,8 @@ d3.queue()
           // TO DO 
           // Get this working, how to compare active metric
           // Added the && and || clause
-          
-          print((datum[metric][year] && ((metric == active_ymetric) || (metric == active_metric)) ))
+
+          console.log((datum[metric][year] && ((metric == active_ymetric) || (metric == active_metric)) ))
           if (datum[metric][year] && ((metric == active_ymetric) || (metric == active_metric)) ) {
             console.log("appending to tooltip")
             var div = tooltip.append("div");
