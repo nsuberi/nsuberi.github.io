@@ -269,18 +269,6 @@ var yAxis = d3.axisLeft()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 //
 // Permanent components
 //
@@ -1033,21 +1021,23 @@ d3.queue()
 
   
     function updateXMetric(metric) {
-      d3.selectAll(".active-metric-label").text(metric_lookup[metric].name);
 
-      xscale = metric_lookup[metric].scale;
+      metric_info = metric_lookup[metric]
+      d3.selectAll(".active-metric-label").text(metric_info.name);
+
+      metric_scale = metric_info.scale;
 
       // for 2000-2015 year ranges
-      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[metric]) {
-        xscale.domain(metric_lookup[metric].longextent);
+      if (String(year).indexOf("-") > -1 && "longextent" in metric_info) {
+        metric_scale.domain(metric_info.longextent);
       } else {
-        xscale.domain(metric_lookup[metric].extent);
+        metric_scale.domain(metric_info.extent);
       }
 
       var xAxis = d3.axisBottom()
         .tickSize(-height)
-        .tickFormat(metric_lookup[metric].format)
-        .scale(xscale);
+        .tickFormat(metric_info.format)
+        .scale(metric_scale);
 
       scatter_canvas.select(".x.axis")
         .transition()
@@ -1055,8 +1045,8 @@ d3.queue()
 
       d3.selectAll(".dark-line-1")
         .transition()
-        .attr("x1", xscale(0))
-        .attr("x2", xscale(0))
+        .attr("x1", metric_scale(0))
+        .attr("x2", metric_scale(0))
 
       scatter_canvas.selectAll(".x.axis text")
         .transition()
@@ -1066,20 +1056,23 @@ d3.queue()
  
     function updateYMetric(metric) {
       active_ymetric = metric;
+      metric_info = metric_lookup[metric]
 
-      d3.selectAll(".active-ymetric-label").text(metric_lookup[metric].name);
+      d3.selectAll(".active-ymetric-label").text(metric_info.name);
 
+
+      metric_scale = yscale
       // for 2000-2015 year ranges
-      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[metric]) {
-        yscale.domain(metric_lookup[metric].longextent);
+      if (String(year).indexOf("-") > -1 && "longextent" in metric_info) {
+        metric_scale.domain(metric_info.longextent);
       } else {
-        yscale.domain(metric_lookup[metric].extent);
+        metric_scale.domain(metric_info.extent);
       }
 
       var yAxis = d3.axisLeft()
-         .tickFormat(metric_lookup[metric].format)
+         .tickFormat(metric_info.format)
         .tickSize(-width)
-        .scale(yscale)
+        .scale(metric_scale)
 
       scatter_canvas.select(".y.axis")
         .transition()
