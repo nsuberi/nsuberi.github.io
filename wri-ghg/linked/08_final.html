@@ -702,7 +702,10 @@ d3.queue()
       .attr("x", 6)
       .attr("y", -5)
       .attr("class", "label active-ymetric-label")
-      .text(metric_lookup[active_ymetric].name + " (" + metric_lookup[active_ymetric].units+ ")");
+      // changed this, no longer including (units)
+      .text(metric_lookup[active_ymetric].name)
+      .append("span")
+      .attr("class", "active-ymetric-label-value");
       // Label displaying current years being shown
     var year_label = svg.append("text")
       .attr("x", width-2)
@@ -717,8 +720,11 @@ d3.queue()
       .attr("x", width-2)
       .attr("y", height-6)
       .attr("text-anchor", "end")
-      .attr("class", "label active-metric-label")
-      .text(metric_lookup[active_metric].name + " (" + metric_lookup[active_ymetric].units+ ")");
+      .attr("class", "active-metric-label-value")
+      // changed this, no longer including (units)
+      .text(metric_lookup[active_metric].name)
+      .append("span")
+      .attr("class", "value active-metric-label");
 
 
 
@@ -866,6 +872,7 @@ d3.queue()
 
     function updateXMetric(metric) {
       d3.selectAll(".active-metric-label").text(metric_lookup[metric].name);
+      d3.selectAll(".active-metric-label-value").text();
 
       xscale = metric_lookup[metric].scale;
 
@@ -899,6 +906,7 @@ d3.queue()
       active_ymetric = metric;
 
       d3.selectAll(".active-ymetric-label").text(metric_lookup[metric].name);
+      d3.selectAll(".active-ymetric-label-value").text();
 
       // for 2000-2015 year ranges
       if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[metric]) {
@@ -1053,7 +1061,7 @@ d3.queue()
         console.log("Updated circles")
 
         update_labels(); 
-        console.log("Updated tooltip and labels")
+        console.log("Updated labels")
 
         update_sparklines();
         console.log("Updated sparklines")
@@ -1130,11 +1138,17 @@ function update_labels(){
 
             if(metric == active_metric){
               // Update the value next to the x-axis label
-              d3.select(".active-metric-label").text(metric_lookup[metric].name + ": " + metric_lookup[metric].format(+datum[metric][year]) + " " + metric_lookup[metric].units)
+              d3.select(".active-metric-label").
+              text(metric_lookup[metric].name + ": ") 
+              d3.select(".active-metric-label-value")
+              .text(metric_lookup[metric].format(+datum[metric][year]) + " " + metric_lookup[metric].units);
             } else {
               // is equal to active_ymetric
               // Update value next to the y-axis label
-              d3.select(".active-ymetric-label").text(metric_lookup[metric].name + ": " + metric_lookup[metric].format(+datum[metric][year]) + " " + metric_lookup[metric].units)
+              d3.select(".active-ymetric-label").
+              text(metric_lookup[metric].name + ": ") 
+              d3.select(".active-ymetric-label-value")
+              .text(metric_lookup[metric].format(+datum[metric][year]) + " " + metric_lookup[metric].units);
             }
 
           }
