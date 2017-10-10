@@ -787,9 +787,9 @@ d3.queue()
           .attr("class", "country")
           .attr("d", path);
 
-        // setYear depends on data and map both being loaded
+        // setYear_updateData depends on data and map both being loaded
         // uses idLookup
-        setYear(2000);
+        setYear_updateData(2000);
         setTimeout(nextYear, 1100);
          console.log("set year and cued nextYear")
 
@@ -850,7 +850,6 @@ d3.queue()
     // *QQ* May have to move this up
     d3.select("#year-slider")
       .on("input", function() {
-        //playing = false;
         year = this.value;
         if (year == 2016) {
           if (active_metric == "consumption_co2") {
@@ -859,7 +858,7 @@ d3.queue()
             year = "2000-2015";
           }
         }
-        setYear(year);
+        setYear_updateData(year);
         if(!playing){
           nextYear()
         }
@@ -880,8 +879,9 @@ d3.queue()
             year = "2000-2015";
           }
         }
-        setYear(year);
-        updateXMetric(metric);
+        setYear_updateData(year);
+        // will update in setYear_updateData
+        //updateXMetric(metric);
         transition_scatter_and_map();
       });
     console.log("set behavior for multiples")
@@ -892,13 +892,12 @@ d3.queue()
 // HELPER FUNCTIONS
 
     function nextYear() {
-      console.log("triggering nextYear")
       if (!playing) return;
 
       year++;
       if (year == 2015 && active_metric == "consumption_co2") {
         year = "2000-2014";
-        setYear(year);
+        setYear_updateData(year);
         return;
       }
       if (year > 2015) {
@@ -907,11 +906,11 @@ d3.queue()
         } else {
           year = "2000-2015";
         }
-        setYear(year);
+        setYear_updateData(year);
         return;
       }
 
-      setYear(year);
+      setYear_updateData(year);
 
       setTimeout(nextYear, 1100);
     };
@@ -979,7 +978,7 @@ d3.queue()
 
 
 
-    function setYear(year) {
+    function setYear_updateData(year) {
       var single_year = true;
       if (String(year).indexOf("-") > -1) {
         single_year = false;
