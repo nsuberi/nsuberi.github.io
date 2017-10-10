@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test30--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test31--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -858,6 +858,7 @@ d3.queue()
             year = "2000-2015";
           }
           setYear_updateData(year);
+
           // If moved to the end, don't even think about nextYear'ing
           return;
         }
@@ -898,6 +899,7 @@ d3.queue()
       if (!playing) return;
 
       year++;
+
       if (year == 2015 && active_metric == "consumption_co2") {
         year = "2000-2014";
         setYear_updateData(year);
@@ -912,10 +914,11 @@ d3.queue()
         setYear_updateData(year);
         return;
       }
-
-      setYear_updateData(year);
-
-      setTimeout(nextYear, 1100);
+      // only trigger nextyear if current year is below 2015
+      if (year < 2015){
+        setYear_updateData(year);
+        setTimeout(nextYear, 1100);
+      }
     };
 
     function updateXMetric(active_metric) {
