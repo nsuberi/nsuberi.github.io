@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test34--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test35--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -868,14 +868,14 @@ d3.queue()
 
           // Should this just check whether currentTimeout exists?
           // Or stay checking whether next_year_in_progress is on?
-          // if(currentTimeout){
-          //    next_year_in_progress = false;
-          //    clearTimeout(currentTimeout);
-          //}
-          if(next_year_in_progress){
-              next_year_in_progress = false;
-              clearTimeout(currentTimeout);
+          if(currentTimeout){
+             next_year_in_progress = false;
+             clearTimeout(currentTimeout);
           }
+          // if(next_year_in_progress){
+          //     next_year_in_progress = false;
+          //     clearTimeout(currentTimeout);
+          // }
 
           setYear_updateData(year);
           // don't call nextYear because this is 2016
@@ -895,13 +895,14 @@ d3.queue()
 
           // Should this just check whether currentTimeout exists?
           // Or stay checking whether next_year_in_progress is on?
-          // if(currentTimeout){
-          //    next_year_in_progress = false;
-          //    
-          if(next_year_in_progress){
-              next_year_in_progress = false;
-              clearTimeout(currentTimeout);
-          } 
+          if(currentTimeout){
+             next_year_in_progress = false;
+             clearTimeout(currentTimeout);
+          }                
+          // if(next_year_in_progress){
+          //     next_year_in_progress = false;
+          //     clearTimeout(currentTimeout);
+          // } 
           
           // Update data labels and visuals
           setYear_updateData(year);
@@ -916,13 +917,14 @@ d3.queue()
 
           // Should this just check whether currentTimeout exists?
           // Or stay checking whether next_year_in_progress is on?
-          // if(currentTimeout){
-          //    next_year_in_progress = false;
-          //    
-          if(next_year_in_progress){
-              next_year_in_progress = false;
-              clearTimeout(currentTimeout);
-          }
+          if(currentTimeout){
+             next_year_in_progress = false;
+             clearTimeout(currentTimeout);
+          }   
+          // if(next_year_in_progress){
+          //     next_year_in_progress = false;
+          //     clearTimeout(currentTimeout);
+          // }
 
           // Update data labels and visuals
           setYear_updateData(year);
