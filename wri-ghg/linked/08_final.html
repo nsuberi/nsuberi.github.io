@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test35--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test36--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -382,12 +382,28 @@ d3.selectAll(".mouseover_checkbox")
 d3.selectAll(".autoplay_checkbox")
 .on("change", function () { 
     if(this.checked){
+      
       playing = true;
-      if(!next_year_in_progress){
+
+      // Is there a timeout in progress?
+      // If so, stop it and start a new one
+      if(currentTimeout){
+        clearTimeout(currentTimeout)
         nextYear();
       }
+
+      return;
+
     } else {
+
       playing = false;
+
+      // Don't allow another nextYear() to continue
+      if(currentTimeout){
+        clearTimeout(currentTimeout)
+      }
+
+      return;
     }
 });
 
