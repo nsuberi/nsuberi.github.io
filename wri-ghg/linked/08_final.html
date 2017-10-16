@@ -121,7 +121,7 @@ path.country {
 }
 </style>
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test32--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test33--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -384,7 +384,7 @@ d3.selectAll(".autoplay_checkbox")
     if(this.checked){
       playing = true;
       if(!next_year_in_progress){
-        nextYear()
+        nextYear();
       }
     } else {
       playing = false;
@@ -854,21 +854,86 @@ d3.queue()
     d3.select("#year-slider")
       .on("input", function() {
         year = this.value;
+
+        // Check for moving to last year
         if (year == 2016) {
+
+          // Map from 2016 to summary periods, account for fact that consumption_co2 doesn't have data for 2015
+          // Could get these measures from EORA later
           if (active_metric == "consumption_co2") {
             year = "2000-2014";
           } else {
             year = "2000-2015";
           }
-          setYear_updateData(year);
 
-          // If moved to the end, don't even think about nextYear'ing
+          // Should this just check whether currentTimeout exists?
+          // Or stay checking whether next_year_in_progress is on?
+          // if(currentTimeout){
+          //    next_year_in_progress = false;
+          //    clearTimeout(currentTimeout);
+          //}
+          if(next_year_in_progress){
+              next_year_in_progress = false;
+              clearTimeout(currentTimeout);
+          }
+
+          setYear_updateData(year);
+          // don't call nextYear because this is 2016
+          //if(playing){
+          //  nextYear();
+          //}
+
           return;
         }
-        setYear_updateData(year);
-        if(playing && !next_year_in_progress){
-          nextYear()
+
+        // Slider year is sometime before 2016
+
+        // Autoplay: on
+        if(playing){
+
+          // Need to clean the previous Timeout to avoid multiple's starting
+
+          // Should this just check whether currentTimeout exists?
+          // Or stay checking whether next_year_in_progress is on?
+          // if(currentTimeout){
+          //    next_year_in_progress = false;
+          //    
+          if(next_year_in_progress){
+              next_year_in_progress = false;
+              clearTimeout(currentTimeout);
+          } 
+          
+          // Update data labels and visuals
+          setYear_updateData(year);
+
+          // Call nextYear() in 1.1 seconds
+          currentTimeout = setTimeout(nextYear, 1100);
+
+          return;
+
+        } else {
+          // Autoplay: off
+
+          // Should this just check whether currentTimeout exists?
+          // Or stay checking whether next_year_in_progress is on?
+          // if(currentTimeout){
+          //    next_year_in_progress = false;
+          //    
+          if(next_year_in_progress){
+              next_year_in_progress = false;
+              clearTimeout(currentTimeout);
+          }
+
+          // Update data labels and visuals
+          setYear_updateData(year);
+
+          // Don't Call nextYear(), autoplay is off
+          // currentTimeout = setTimeout(nextYear, 1100);
+
         }
+
+
+        
       });
       // Set year and cue playforward at end of map load
       console.log("set behavior for time slider")
@@ -888,7 +953,7 @@ d3.queue()
         }
         setYear_updateData(year);
         // will update in setYear_updateData
-        //updateXMetric(metric);
+        //updateXScale(metric);
         transition_scatter_and_map();
       });
     console.log("set behavior for multiples")
@@ -896,40 +961,68 @@ d3.queue()
 // end of data load await
 });
 
+
+
+
 // HELPER FUNCTIONS
 
+
+    var currentTimeout;
+
     function nextYear() {
-      next_year_in_progress = true;
+
+      next_year_in_progress=true;
+
       if (!playing) {
-        next_year_in_progress = false;
         return;
       }
+
+      // Handle case if at end of period
+      if(String(year).indexOf("-") > -1){
+
+        // Decide: turn off autoplay, or keep it on?
+        // I think leave it on, and don't call next year
+        // playing=false;
+
+        next_year_in_progress=false;
+        // Can't go on, because year++ would trigger an exception
+        // won't be able to increment a string (2000-2014, or 2000-2015)
+        return;
+      }
+
       year++;
 
-      if (year == 2015 && active_metric == "consumption_co2") {
-        year = "2000-2014";
-        setYear_updateData(year);
-        setTimeout(nextYear, 1100);
-        return;
-      }
-      if (year > 2015) {
-        if (active_metric == "consumption_co2") {
+      // Map 2016 to the summary data for whatever period data is availabl for
+      if (year == 2016) {
+
+        if(active_metric == "consumption_co2"){
+          // no 2015 data available, so default to period summary
           year = "2000-2014";
         } else {
-          year = "2000-2015";
+          year = "2000-2015"
         }
+
+        // update with this year, which will contain a "-" and trigger behavior in setYear_updateData
         setYear_updateData(year);
-        next_year_in_progress = false;
+
+        // playing stays on, but doesn't call nextYear()
+        next_year_in_progress=false;
+
         return;
-      }
-      // only trigger nextyear if current year is below 2015
-      if (year < 2015){
-        setYear_updateData(year);
-        setTimeout(nextYear, 1100);
+      } else if(year < 2016) {
+          // Update data
+          setYear_updateData(year);
+          // trigger nextYear()
+          currentTimeout = setTimeout(nextYear, 1100);
+        return;
       }
     };
 
-    function updateXMetric(active_metric) {
+
+
+
+
+    function updateXScale(active_metric) {
 
       datum = lookup[selected_country]
       d3.selectAll(".active-metric-label").text(metric_lookup[active_metric].name);
@@ -963,7 +1056,7 @@ d3.queue()
         .attr("y", 8);
     };
 
-    function updateYMetric(active_ymetric) {
+    function updateYScale(active_ymetric) {
 
       datum = lookup[selected_country]
       d3.selectAll(".active-ymetric-label").text(metric_lookup[active_ymetric].name + ": " + metric_lookup[active_ymetric].format(+datum[active_ymetric][year]) + " " + metric_lookup[active_ymetric].units);
@@ -994,6 +1087,8 @@ d3.queue()
 
     function setYear_updateData(year) {
       var single_year = true;
+
+      // If year is a range (2000-2014 or 2000-2015)
       if (String(year).indexOf("-") > -1) {
         single_year = false;
         if (active_metric == "consumption_co2") {
@@ -1004,6 +1099,10 @@ d3.queue()
         year_label.text(year);
         d3.select("#year-slider").node().value = 2016;
       } else {
+
+        // If single year, make label equal to last year - this year
+        // update year slider
+        // will this trigger loop again?
         year_label.text((year-1) + "-" + year);
         d3.select("#year-slider").node().value = year;
       }
@@ -1035,8 +1134,8 @@ d3.queue()
           .style("opacity", 0)
       }
     
-      updateXMetric(active_metric);
-      updateYMetric(active_ymetric);
+      updateXScale(active_metric);
+      updateYScale(active_ymetric);
       transition_scatter_and_map();
 
       // Was UpdateDataValues(), break apart here
@@ -1047,6 +1146,9 @@ d3.queue()
 
     // Creates transitions for dot location & color, map color
     function transition_scatter_and_map() {
+
+      // If 2000-2014, would only be showing 
+
       svg.selectAll("g.bubble")
         .transition()
         .duration(700)
