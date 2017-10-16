@@ -961,7 +961,15 @@ d3.queue()
     d3.selectAll(".multiple")
       .on("click", function(metric) {
         // 2000-2014 for consumption_co2 only
+
+        // Debugging problem of clicking on consumption_emissions causing an error, where consumption_co2 is not recognized in
+        // lookup[selected_country]["consumption_co2"]...
+        // this lookup returns undefined, and then the call
+        // lookup[selected_country]["consumption_co2"][year] returns an Uncaught TypeError, cannot read property "2014" or whatever year of undefined
         active_metric = metric;
+        console.log("active_metric is: " + metric)
+
+
         if (String(year).indexOf("-") > -1) {
           if (metric == "consumption_co2") {
             year = "2000-2014";
@@ -1104,17 +1112,21 @@ d3.queue()
 
 
     function setYear_updateData(year) {
-      var single_year = true;
+      var summary_period = true;
 
       // If year is a range (2000-2014 or 2000-2015)
       if (String(year).indexOf("-") > -1) {
-        single_year = false;
+        summary_period = true;
+
+        // Only behave differently with consumption_co2 if it is a summary-year
         if (active_metric == "consumption_co2") {
           year = "2000-2014";
         } else {
           year = "2000-2015";
         }
         year_label.text(year);
+
+        // Reinfoce that the year slider should be at 2016 during this time range, summary selection
         d3.select("#year-slider").node().value = 2016;
       } else {
 
@@ -1125,7 +1137,21 @@ d3.queue()
         d3.select("#year-slider").node().value = year;
       }
 
-      if (single_year) {
+      if (summary_period) {
+        // It doesn't make sense to show the plumb line for the summary period
+        // Transition the plumb lines to invisible at x=0
+        d3.selectAll("line.plumb")
+          .transition()
+          .duration(200)
+          .style("opacity", 0)
+
+        d3.selectAll(".multiple-year-label")
+          .text(year)
+          .transition()
+          .duration(200)
+          .style("opacity", 0)
+      } else {
+        // Transition the plumb lines to appear at the appropriate year
         d3.selectAll("line.plumb")
           .transition()
           .duration(200)
@@ -1139,17 +1165,6 @@ d3.queue()
           .duration(200)
           .style("opacity", 1)
           .attr("x", multiple_xscale(year))
-      } else {
-        d3.selectAll("line.plumb")
-          .transition()
-          .duration(200)
-          .style("opacity", 0)
-
-        d3.selectAll(".multiple-year-label")
-          .text(year)
-          .transition()
-          .duration(200)
-          .style("opacity", 0)
       }
     
       updateXScale(active_metric);
