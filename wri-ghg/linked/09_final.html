@@ -85,37 +85,6 @@ path.country {
   margin: 0 0 12px 0;
 }
 
-.multiple {
-  width: 180px;
-  height: 120px;
-  float: left;
-  position: relative;
-  background: #fcfcfc;
-  border: 1px solid #d0d0d0;
-  margin: 4px;
-  cursor: pointer;
-}
-
-.multiple h3 {
-  position: relative;
-  font-size: 16px;
-  width: 180px;
-  z-index: 5;
-  margin: 1px 0 0 5px;
-}
-
-.multiple svg {
-  position: absolute;
-  top: 40px;
-  z-index: 4;
-}
-
-.multiple path.spark {
-  stroke-width: 2px;
-  stroke: #7D0063;
-  fill: none;
-}
-
 #year-slider {
   margin: 0 0px 0 0;
 }
@@ -427,27 +396,6 @@ d3.select("body")
   .attr("class", "country-label")
   .text(function(d) { return "World"; });
 
-d3.select("body")
-  .append("div")
-  .attr("id", "multiples");
-
-var multiples = d3.select("#multiples")
-  .selectAll("div")
-  .data(metrics)
-  .enter().append("div")
-  .attr("class", "multiple")
-
-multiples.append("h3")
-  .text(function(d) { return metric_lookup[d].name; });
-
-multiples.append("h3")
-  .attr("class", function(d) { return "multiple-value multiple-value-" + d })
-  .text(function(d) { return ""; });
-
-multiples.append("svg")
-  .attr("height", "120px")
-  .attr("width", "180px")
-
 var xscale = d3.scaleLinear()
   .domain([-0.5,0.5])
   .range([0,width])
@@ -458,8 +406,6 @@ var yscale = d3.scaleLinear()
   .range([height,0])
   .clamp("true");
 
-
-var multiple_xscale = d3.scaleLinear().domain([2000,2015]).range([12, 168]);
 
 var radius = d3.scaleSqrt()
   .range([2.5,20])
@@ -531,80 +477,19 @@ map_svg.append("path")
 // which ensures the data is loaded before graphing it
 d3.queue()
 // Annual change
-  .defer(d3.csv, "../final-data/GDP\ annual\ change\ 2000-15\ 9.28.17.csv")
-  .defer(d3.csv, "../final-data/CO2 annual change data 2000-2015 9.18.17.csv")
-  .defer(d3.csv, "../final-data/consumption\ CO2\ annual\ change\ data\ 2000-2015\ 9.28.17.csv")
-// Absolute value
-  .defer(d3.csv, "../final-data/absolute\ country\ GDP\ 1999-2015.csv")
-  .defer(d3.csv, "../final-data/absolute\ country\ annual\ carbon\ emissions\ 2000-2015.csv")
-// ICGGD index value
-  .defer(d3.csv, "../data/Index\ calculated\ with\ Territorial\ Emissions\ and\ GDP.csv")
-// World Bank indicators
-  .defer(d3.csv, "../final-data/wb_data\ 9.29.17.csv")
-  .await(function(error, raw_gdp, raw_co2, consumption_co2, 
-    abs_gdp, abs_carbon, index_territorial, wb_data) {
-
+  .defer(d3.csv, "../final-data/All\ Data\ Together.csv")
+  .await(function(error, all_data) {
 
     // Fill in lookup table
-
-// Annual change
-    raw_gdp.forEach(function(d) {
+    all_data.forEach(function(d) {
       lookup[d["ISO"]] = lookup[d["ISO"]] || {};
-      lookup[d["ISO"]]["GDP"] = d;
+      // Check for which indicator here
+      lookup[d["ISO"]][d["Indicator"]] = d;
       lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["Country Name"]
     });
-    raw_co2.forEach(function(d) {
-      lookup[d["ISO"]] = lookup[d["ISO"]] || {};
-      lookup[d["ISO"]]["CO2"] = d;
-      lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["wb_name"]
-    });
-    consumption_co2.forEach(function(d) {
-      lookup[d["ISO"]] = lookup[d["ISO"]] || {};
-      lookup[d["ISO"]]["consumption_co2"] = d;
-      lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["wb_name"]
-    });
-// Absolute Value
-    abs_gdp.forEach(function(d) {
-      lookup[d["ISO"]] = lookup[d["ISO"]] || {};
-      lookup[d["ISO"]]["abs_gdp"] = d;
-      lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["Country Name"]
-    });
-    abs_carbon.forEach(function(d) {
-      lookup[d["ISO"]] = lookup[d["ISO"]] || {};
-      lookup[d["ISO"]]["abs_carbon"] = d;
-      lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["country"]
-    });
-// ICGGD index values
-    index_territorial.forEach(function(d) {
-      lookup[d["ISO"]] = lookup[d["ISO"]] || {};
-      lookup[d["ISO"]]["index_territorial"] = d;
- // Doesn't have full country names
- //     lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["Country Name"]
-    });
-// World Bank indicators
-    wb_data.forEach(function(d) {
-      metrics.forEach(function(metric) {
-        if (metric in d) {
-          lookup[d["country_code"]] = lookup[d["country_code"]] || {};
-          lookup[d["country_code"]][metric] = lookup[d["country_code"]][metric] || {};
-          lookup[d["country_code"]][metric][d.year] = d[metric];
-          // Doesn't have full country names
-        }
-      });
-    });
 
-// Once data is reorganized, will upload like this
-    wb_data.forEach(function(d) {
-        lookup[d["ISO"]] = lookup[d["ISO"]] || {};
-        lookup[d["ISO"]][d.Indicator] = d;
-        lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["Country Name"]
-    });
-
-    // set up xscale for plumb lines
     // logic for calculating extent, choosing preset if available
-
-
-    
+ 
     metrics.forEach(function(metric) {
       var calculated_extent = d3.extent(wb_data.filter(function(d) { return d.year.indexOf("-") < 0 && d.country_code !== "WLD"; }), function(d) { return +d[metric]; })
       var calculated_long_extent = d3.extent(wb_data.filter(function(d) { return d.year.indexOf("-") > -1 && d.country_code !== "WLD"; }), function(d) { return +d[metric]; })
@@ -618,46 +503,7 @@ d3.queue()
       var yscale = metric_lookup[metric].yscale = d3.scaleLinear().domain(extent).range([70,6]).clamp(true);
       metric_lookup[metric].scale = d3.scaleLinear().domain(extent).range([0,width]).clamp(true);
 
-      // draws the plumb line
-      // *QQ* and the yAxis? confused because don't see
-      metric_lookup[metric].line = d3.line()
-        .defined(function(d) { return d.value != "" && !isNaN(d.value); })
-        .x(function(d) { return multiple_xscale(d.year); })
-        .y(function(d) { return yscale(d.value); });
-      metric_lookup[metric].yAxis = d3.axisLeft()
-        .tickFormat(metric_lookup[metric].format)
-        .tickSize(-200)
-        .scale(metric_lookup[metric].scale)
     });
-
-    // Create spark lines
-    // *QQ* not quite sure how spark lines are associated with metric_lookup[metric].line
-
-    multiples.select("svg")
-      .append("path")
-      .attr("class", "spark")
-
-    // Create tracking lines & years
-    multiples.select("svg")
-      .append("line")
-      .attr("class", "plumb")
-      .attr("x1", multiple_xscale(2000))
-      .attr("x2", multiple_xscale(2000))
-      .attr("y1", 6)
-      .attr("y2", 70)
-      .style("stroke", "#bbb")
-
-    multiples.select("svg")
-      .append("text")
-      .attr("class", "multiple-year-label")
-      .attr("x", multiple_xscale(2000))
-      .attr("y", 78)
-      .style("text-anchor", "middle")
-      .style("stroke", "#bbb")
-      .style("font-size", "12px")
-      .text(2000)
-
-
 
       // Starting to set up the Scatterplot
       // grab countries, set axes and tick text location
@@ -964,38 +810,6 @@ d3.queue()
       console.log("set behavior for time slider")
       
 
-    // define click-on-wb-indicator behavior
-    d3.selectAll(".multiple")
-      .on("click", function(metric) {
-        // 2000-2014 for consumption_co2 only
-
-        // Debugging problem of clicking on consumption_emissions causing an error, where consumption_co2 is not recognized in
-        // lookup[selected_country]["consumption_co2"]...
-        // this lookup returns undefined, and then the call
-        // lookup[selected_country]["consumption_co2"][year] returns an Uncaught TypeError, cannot read property "2014" or whatever year of undefined
-        active_metric = metric;
-        console.log("active_metric is: " + metric)
-
-
-        if (String(year).indexOf("-") > -1) {
-          if (metric == "consumption_co2") {
-            year = "2000-2014";
-          } else {
-            year = "2000-2015";
-          }
-        }
-        setYear_updateData(year);
-        // will update in setYear_updateData
-        //updateXScale(metric);
-        transition_scatter_and_map();
-      });
-    console.log("set behavior for multiples")
-
-// end of data load await
-});
-
-
-
 
 // HELPER FUNCTIONS
 
@@ -1143,36 +957,6 @@ d3.queue()
         year_label.text((year-1) + "-" + year);
         d3.select("#year-slider").node().value = year;
       }
-
-      if (summary_period) {
-        // It doesn't make sense to show the plumb line for the summary period
-        // Transition the plumb lines to invisible at x=0
-        d3.selectAll("line.plumb")
-          .transition()
-          .duration(200)
-          .style("opacity", 0)
-
-        d3.selectAll(".multiple-year-label")
-          .text(year)
-          .transition()
-          .duration(200)
-          .style("opacity", 0)
-      } else {
-        // Transition the plumb lines to appear at the appropriate year
-        d3.selectAll("line.plumb")
-          .transition()
-          .duration(200)
-          .style("opacity", 1)
-          .attr("x1", multiple_xscale(year))
-          .attr("x2", multiple_xscale(year))
-
-        d3.selectAll(".multiple-year-label")
-          .text(year)
-          .transition()
-          .duration(200)
-          .style("opacity", 1)
-          .attr("x", multiple_xscale(year))
-      }
     
       updateXScale(active_metric);
       updateYScale(active_ymetric);
@@ -1180,7 +964,6 @@ d3.queue()
 
       // Was UpdateDataValues(), break apart here
       update_labels(); 
-      update_sparklines();
 
     }
 
@@ -1265,9 +1048,6 @@ d3.queue()
 
         update_labels(); 
         console.log("Updated labels")
-
-        update_sparklines();
-        console.log("Updated sparklines")
     }
 
 function reset_to_global(){
@@ -1290,16 +1070,9 @@ function reset_to_global(){
             svg.selectAll(".bubble text")
               .style("display", "none");
 
-            // set the "d" attribute on the spark line to nothing
-            // *QQ* what's going on here?
-            d3.selectAll("path.spark")
-              .attr("d", "");
-
             // hides the tooltip
             //tooltip.style("display", "none");
 
-            // uses the global selected_country variable to update
-            update_sparklines();
 }
 
 /*
@@ -1357,26 +1130,7 @@ function update_labels(){
         });
 }
 
-function update_sparklines(){
 
-        var datum = lookup[selected_country];
-        
-        // update wb indicators
-        multiples.each(function(metric) {
-          if (metric in datum) {
-              var series = [];
-              d3.range(2000,2016).forEach(function(year) {
-                series.push({
-                  year: +year,
-                  value: +datum[metric][year]
-                })
-              });
-              d3.select(this)
-                .select("path.spark")
-                .attr("d", metric_lookup[metric].line(series))
-            }
-          });
-}
 
 function update_circles(){
             // uses the .raise() function to bring a point above others
