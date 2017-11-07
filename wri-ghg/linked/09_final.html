@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test52--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test53--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -329,8 +329,8 @@ var metric_lookup = {
 }
 
 var margin = { top: 50, right: 20, bottom: 50, left: 50 };
-var width = 530 - margin.left - margin.right;
-var height = 560 - margin.top - margin.bottom;
+var scatter_width = 530 - margin.left - margin.right;
+var scatter_height = 560 - margin.top - margin.bottom;
 
 var lookup = {};
 
@@ -341,8 +341,8 @@ var map_height = 560;
 
 var scatter_svg = d3.select("body")
   .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    .attr("width", scatter_width + margin.left + margin.right)
+    .attr("height", scatter_height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -361,7 +361,7 @@ var scatter_svg = d3.select("body")
 
       // Label displaying current years being shown
     var year_label = scatter_svg.append("text")
-      .attr("x", width-2)
+      .attr("x", scatter_width-2)
       .attr("y", -5)
       .attr("class", "label")
       .attr("text-anchor", "end")
@@ -372,8 +372,8 @@ var scatter_svg = d3.select("body")
 
 
     scatter_svg.append("text")
-      .attr("x", width-2)
-      .attr("y", height-6)
+      .attr("x", scatter_width-2)
+      .attr("y", scatter_height-6)
       .attr("text-anchor", "end")
       .attr("class", "active_x_metric-label")
       // changed this, no longer including (units)
@@ -382,8 +382,8 @@ var scatter_svg = d3.select("body")
 
 // What does this do? Placeholder for the value
     scatter_svg.append("text")
-      .attr("x", width-2)
-      .attr("y", height-20)
+      .attr("x", scatter_width-2)
+      .attr("y", scatter_height-20)
       .attr("text-anchor", "end")
       .attr("class", "active_x_metric-label-value");
 
@@ -410,8 +410,8 @@ map_container
       var scatter_x_select = d3.select("body")
         .append('select')
           .attr('class','select_x')
-          .attr("x", width+10)
-          .attr("y", height+10)
+          .attr("x", scatter_width+10)
+          .attr("y", scatter_height+10)
           .on('change',change_x_metric)
 
       var x_select_options = scatter_x_select
@@ -423,8 +423,8 @@ map_container
       var scatter_y_select = d3.select("body")
         .append('select')
           .attr('class','select_y')
-          .attr("x", width+10)
-          .attr("y", height+30)
+          .attr("x", scatter_width+10)
+          .attr("y", scatter_height+30)
           .on('change',change_y_metric)
 
       var y_select_options = scatter_y_select
@@ -528,12 +528,12 @@ map_container.append("a")
 
 var xscale = d3.scaleLinear()
   .domain([-0.5,0.5])
-  .range([0,width])
+  .range([0,scatter_width])
   .clamp("true");
 
 var yscale = d3.scaleLinear()
   .domain([-0.5,0.5])
-  .range([height,0])
+  .range([scatter_height,0])
   .clamp("true");
 
 
@@ -562,7 +562,7 @@ var colorMap = d3.scaleThreshold()
 
 
 var xAxis = d3.axisBottom()
-  .tickSize(-height)
+  .tickSize(-scatter_height)
   .tickFormat(function(d) {
 //    if (d == -0.25) return "<" + format(d);
 //    if (d == 0.25) return ">" + format(d);
@@ -575,7 +575,7 @@ var yAxis = d3.axisLeft()
 //    if (d == 0) { return "N/A"; }
     return format(d);
   })
-  .tickSize(-width)
+  .tickSize(-scatter_width)
   .scale(yscale)
 
 
@@ -656,7 +656,7 @@ d3.queue()
       
 
       var yscale = metric_lookup[metric].yscale = d3.scaleLinear().domain(extent).range([70,6]).clamp(true);
-      metric_lookup[metric].scale = d3.scaleLinear().domain(extent).range([0,width]).clamp(true);
+      metric_lookup[metric].scale = d3.scaleLinear().domain(extent).range([0,scatter_width]).clamp(true);
 
     });
 
@@ -668,7 +668,7 @@ d3.queue()
 
     // Draw X axis
     scatter_svg.append("g")
-      .attr("transform", "translate(0," + height + ")")
+      .attr("transform", "translate(0," + scatter_height + ")")
       .attr("class", "x axis")
       .call(xAxis);
 
@@ -694,7 +694,7 @@ d3.queue()
       .attr("x1", xscale(0))
       .attr("x2", xscale(0))
       .attr("y1", 0)
-      .attr("y2", height)
+      .attr("y2", scatter_height)
 
     scatter_svg
       .append("line")
@@ -702,7 +702,7 @@ d3.queue()
       .style("stroke", "#777")
       .style("stroke-width", 1)
       .attr("x1", 0)
-      .attr("x2", width)
+      .attr("x2", scatter_width)
       .attr("y1", yscale(0))
       .attr("y2", yscale(0))
 
@@ -1036,7 +1036,7 @@ d3.queue()
       }
 
       var xAxis = d3.axisBottom()
-        .tickSize(-height)
+        .tickSize(-scatter_height)
         .tickFormat(metric_lookup[active_x_metric].format)
         .scale(xscale);
 
@@ -1068,7 +1068,7 @@ d3.queue()
 
       var yAxis = d3.axisLeft()
          .tickFormat(metric_lookup[active_y_metric].format)
-        .tickSize(-width)
+        .tickSize(-scatter_width)
         .scale(yscale)
 
       scatter_svg.select(".y.axis")
