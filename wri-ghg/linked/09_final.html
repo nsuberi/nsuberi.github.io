@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test47--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test49--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -112,8 +112,8 @@ path.country {
 var playing = true;
 var next_year_in_progress = false;
 var year = 2000;
-var active_metric = "Production CO2 Emissions Annual Change";
-var active_ymetric = "GDP percent change";
+var active_x_metric = "Production CO2 Emissions Annual Change";
+var active_y_metric = "GDP percent change";
 var clicked_country = null;
 var selected_country = "WLD";
 
@@ -139,6 +139,17 @@ var metrics = ["ICGGD with Production Emissions",
 "renewable_energy_consumption_of_total_final_energy_consumpti", 
 "urban_population_of_total_sp_urb_totl_in_zs", 
 "proportion_of_seats_held_by_women_in_national_parliaments"];
+
+var y_metrics = ["ICGGD with Production Emissions", 
+"ICGGD with Consumption Emissions", 
+"Consumption CO2 Emissions Annual Change", 
+"Consumption CO2 Emissions Absolute Value", 
+"Production CO2 Emissions Annual Change",
+"Production CO2 Emissions Absolute Value", 
+"GDP percent change", 
+"GDP"]
+var x_metrics = metrics;
+
 
 var format = d3.format(".0%");
 
@@ -328,7 +339,7 @@ var lookup = {};
 var map_width = 620;
 var map_height = 560;
 
-var svg = d3.select("body")
+var scatter_svg = d3.select("body")
   .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -336,20 +347,20 @@ var svg = d3.select("body")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         // Label displaying which y-metric is active
-    svg.append("text")
+    scatter_svg.append("text")
       .attr("x", 6)
       .attr("y", -5)
-      .attr("class", "label active-ymetric-label")
+      .attr("class", "label active_y_metric-label")
       // changed this, no longer including (units)
-      .text(metric_lookup[active_ymetric].name + ": ")
+      .text(metric_lookup[active_y_metric].name + ": ")
 
-/*    svg.append("text")
+/*    scatter_svg.append("text")
       .attr("x", 6)
       .attr("y", 15)
-      .attr("class", "active-ymetric-label-value");*/
+      .attr("class", "active_y_metric-label-value");*/
 
       // Label displaying current years being shown
-    var year_label = svg.append("text")
+    var year_label = scatter_svg.append("text")
       .attr("x", width-2)
       .attr("y", -5)
       .attr("class", "label")
@@ -360,19 +371,88 @@ var svg = d3.select("body")
       // Label showing which x-metric is active
 
 
-    svg.append("text")
+    scatter_svg.append("text")
       .attr("x", width-2)
       .attr("y", height-6)
       .attr("text-anchor", "end")
-      .attr("class", "active-metric-label")
+      .attr("class", "active_x_metric-label")
       // changed this, no longer including (units)
-      .text(metric_lookup[active_metric].name);
+      .text(metric_lookup[active_x_metric].name);
 
-    svg.append("text")
+
+      var scatter_x_select = scatter_svg
+        .append('select')
+          .attr('class','select_x')
+          .attr("x", width+10)
+          .attr("y", height+10)
+          .on('change',change_x_metric)
+
+      var x_select_options = scatter_x_select
+        .selectAll('option')
+        .data(x_metrics).enter()
+        .append('option')
+          .text(function (d) { return d; });
+
+      var scatter_y_select = scatter_svg
+        .append('select')
+          .attr('class','select_y')
+          .attr("x", width+10)
+          .attr("y", height+30)
+          .on('change',change_y_metric)
+
+      var y_select_options = scatter_y_select
+        .selectAll('option')
+        .data(y_metrics).enter()
+        .append('option')
+          .text(function (d) { return d; });
+
+      function change_x_metric() {
+        selectValue = d3.select('select_x').property('value')
+        active_x_metric = selectValue
+
+        console.log("active_x_metric is: " + active_x_metric)
+
+
+        if (String(year).indexOf("-") > -1) {
+          if (metric == "Consumption CO2 Emissions Annual Change") {
+            year = "2000-2014";
+          } else {
+            year = "2000-2015";
+          }
+        }
+        setYear_updateData(year);
+        // will update in setYear_updateData
+        //updateXScale(metric);
+        transition_scatter_and_map();
+      };
+
+      function change_y_metric() {
+        selectValue = d3.select('select_y').property('value')
+        active_y_metric = selectValue
+
+        console.log("active_y_metric is: " + active_y_metric)
+
+
+        if (String(year).indexOf("-") > -1) {
+          if (metric == "Consumption CO2 Emissions Annual Change") {
+            year = "2000-2014";
+          } else {
+            year = "2000-2015";
+          }
+        }
+        setYear_updateData(year);
+        // will update in setYear_updateData
+        //updateXScale(metric);
+        transition_scatter_and_map();
+      };
+
+
+// What does this do? Placeholder for the value
+    scatter_svg.append("text")
       .attr("x", width-2)
       .attr("y", height-20)
       .attr("text-anchor", "end")
-      .attr("class", "active-metric-label-value");
+      .attr("class", "active_x_metric-label-value");
 
 
 var map_container = d3.select("body")
@@ -578,17 +658,17 @@ d3.queue()
     var countries = d3.keys(lookup);
 
     // Draw X axis
-    svg.append("g")
+    scatter_svg.append("g")
       .attr("transform", "translate(0," + height + ")")
       .attr("class", "x axis")
       .call(xAxis);
 
     // Place text relative to the X axis
-    svg.selectAll(".x.axis text")
+    scatter_svg.selectAll(".x.axis text")
       .attr("y", 8);
 
     // Draw Y Axis
-    svg.append("g")
+    scatter_svg.append("g")
       .attr("transform", "translate(0,0)")
       .attr("class", "y axis")
       .call(yAxis);
@@ -626,7 +706,7 @@ d3.queue()
 
 
     // draw bubbles
-    var group = svg.selectAll("g.bubble")
+    var group = scatter_svg.selectAll("g.bubble")
       .data(countries.filter(function(d) { 
         // only include those not in the exclude list
         return d && exclude.indexOf(d) == -1;
@@ -643,7 +723,7 @@ d3.queue()
       .attr("class", "bubble")
       .attr("transform", function(d) {
         // scale x, y location by value of the x metric in a given year, in country d
-        return "translate(" + xscale(+lookup[d][active_metric][year]) + "," + yscale(+lookup[d][active_ymetric][year]) + ")"
+        return "translate(" + xscale(+lookup[d][active_x_metric][year]) + "," + yscale(+lookup[d][active_y_metric][year]) + ")"
       });
 
     group
@@ -737,7 +817,7 @@ d3.queue()
             if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
             if (!(country in lookup)) { return "#eaeaea"; }
             var datum = lookup[country];
-            if (datum[active_ymetric][year] == "") { return "#eaeaea" };
+            if (datum[active_y_metric][year] == "") { return "#eaeaea" };
 
             // TO DO
             // Add logic here to change up which variable is used to color
@@ -793,9 +873,9 @@ d3.queue()
         // Check for moving to last year
         if (year == 2016) {
 
-          // Map from 2016 to summary periods, account for fact that consumption_co2 doesn't have data for 2015
+          // Map from 2016 to summary periods, account for fact that Consumption CO2 Emissions Annual Change doesn't have data for 2015
           // Could get these measures from EORA later
-          if (active_metric == "consumption_co2") {
+          if (active_x_metric == "Consumption CO2 Emissions Annual Change") {
             year = "2000-2014";
           } else {
             year = "2000-2015";
@@ -904,7 +984,7 @@ d3.queue()
       // Map 2016 to the summary data for whatever period data is availabl for
       if (year == 2016) {
 
-        if(active_metric == "consumption_co2"){
+        if(active_x_metric == "Consumption CO2 Emissions Annual Change"){
           // no 2015 data available, so default to period summary
           year = "2000-2014";
         } else {
@@ -931,27 +1011,27 @@ d3.queue()
 
 
 
-    function updateXScale(active_metric) {
+    function updateXScale(active_x_metric) {
 
       datum = lookup[selected_country]
-      d3.selectAll(".active-metric-label").text(metric_lookup[active_metric].name);
-      d3.selectAll(".active-metric-label-value").text(metric_lookup[active_metric].format(+datum[active_metric][year]) + " " + metric_lookup[active_metric].units);
+      d3.selectAll(".active_x_metric-label").text(metric_lookup[active_x_metric].name);
+      d3.selectAll(".active_x_metric-label-value").text(metric_lookup[active_x_metric].format(+datum[active_x_metric][year]) + " " + metric_lookup[active_x_metric].units);
 
-      xscale = metric_lookup[active_metric].scale;
+      xscale = metric_lookup[active_x_metric].scale;
 
       // for 2000-2015 year ranges
-      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[active_metric]) {
-        xscale.domain(metric_lookup[active_metric].longextent);
+      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[active_x_metric]) {
+        xscale.domain(metric_lookup[active_x_metric].longextent);
       } else {
-        xscale.domain(metric_lookup[active_metric].extent);
+        xscale.domain(metric_lookup[active_x_metric].extent);
       }
 
       var xAxis = d3.axisBottom()
         .tickSize(-height)
-        .tickFormat(metric_lookup[active_metric].format)
+        .tickFormat(metric_lookup[active_x_metric].format)
         .scale(xscale);
 
-      svg.select(".x.axis")
+      scatter_svg.select(".x.axis")
         .transition()
         .call(xAxis);
 
@@ -960,29 +1040,29 @@ d3.queue()
         .attr("x1", xscale(0))
         .attr("x2", xscale(0))
 
-      svg.selectAll(".x.axis text")
+      scatter_svg.selectAll(".x.axis text")
         .transition()
         .attr("y", 8);
     };
 
-    function updateYScale(active_ymetric) {
+    function updateYScale(active_y_metric) {
 
       datum = lookup[selected_country]
-      d3.selectAll(".active-ymetric-label").text(metric_lookup[active_ymetric].name + ": " + metric_lookup[active_ymetric].format(+datum[active_ymetric][year]) + " " + metric_lookup[active_ymetric].units);
+      d3.selectAll(".active_y_metric-label").text(metric_lookup[active_y_metric].name + ": " + metric_lookup[active_y_metric].format(+datum[active_y_metric][year]) + " " + metric_lookup[active_y_metric].units);
 
       // for 2000-2015 year ranges
-      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[active_ymetric]) {
-        yscale.domain(metric_lookup[active_ymetric].longextent);
+      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[active_y_metric]) {
+        yscale.domain(metric_lookup[active_y_metric].longextent);
       } else {
-        yscale.domain(metric_lookup[active_ymetric].extent);
+        yscale.domain(metric_lookup[active_y_metric].extent);
       }
 
       var yAxis = d3.axisLeft()
-         .tickFormat(metric_lookup[active_ymetric].format)
+         .tickFormat(metric_lookup[active_y_metric].format)
         .tickSize(-width)
         .scale(yscale)
 
-      svg.select(".y.axis")
+      scatter_svg.select(".y.axis")
         .transition()
         .call(yAxis);
 
@@ -1001,8 +1081,8 @@ d3.queue()
       if (String(year).indexOf("-") > -1) {
         summary_period = true;
 
-        // Only behave differently with consumption_co2 if it is a summary-year
-        if (active_metric == "consumption_co2") {
+        // Only behave differently with Consumption CO2 Emissions Annual Change if it is a summary-year
+        if (active_x_metric == "Consumption CO2 Emissions Annual Change") {
           year = "2000-2014";
         } else {
           year = "2000-2015";
@@ -1020,8 +1100,8 @@ d3.queue()
         d3.select("#year-slider").node().value = year;
       }
     
-      updateXScale(active_metric);
-      updateYScale(active_ymetric);
+      updateXScale(active_x_metric);
+      updateYScale(active_y_metric);
       transition_scatter_and_map();
 
       // Was UpdateDataValues(), break apart here
@@ -1034,21 +1114,21 @@ d3.queue()
 
       // If 2000-2014, would only be showing 
 
-      svg.selectAll("g.bubble")
+      scatter_svg.selectAll("g.bubble")
         .transition()
         .duration(700)
         .style("opacity", function(d) {
           var both_exist = true;
-          if (active_metric in lookup[d] && year in lookup[d][active_metric]) {
-            var value = lookup[d][active_metric][year];
+          if (active_x_metric in lookup[d] && year in lookup[d][active_x_metric]) {
+            var value = lookup[d][active_x_metric][year];
             if (value == "") {
               both_exist = false;
             }
           } else {
             both_exist = false;
           }
-          if (active_ymetric in lookup[d] && year in lookup[d][active_ymetric]) {
-            var value = lookup[d][active_ymetric][year];
+          if (active_y_metric in lookup[d] && year in lookup[d][active_y_metric]) {
+            var value = lookup[d][active_y_metric][year];
             if (value == "") {
               both_exist = false;
             }
@@ -1058,16 +1138,16 @@ d3.queue()
           return both_exist ? 0.8 : 0;
         })
         .attr("transform", function(d) {
-          if (active_metric in lookup[d] && year in lookup[d][active_metric]) {
-            var value = lookup[d][active_metric][year];
+          if (active_x_metric in lookup[d] && year in lookup[d][active_x_metric]) {
+            var value = lookup[d][active_x_metric][year];
             var x = value == "" ? 0 : xscale(+value);
           } else {
             var x = 0;
           }
-          return "translate(" + x + "," + yscale(+lookup[d][active_ymetric][year]) + ")"
+          return "translate(" + x + "," + yscale(+lookup[d][active_y_metric][year]) + ")"
         });
 
-      svg.selectAll("g.bubble circle")
+      scatter_svg.selectAll("g.bubble circle")
         .transition()
         .duration(700)
         .attr("r", function(d) {
@@ -1076,8 +1156,8 @@ d3.queue()
           return radius(+lookup[d]["Production CO2 Emissions Absolute Value"][year].replace(",","")) || 2;
         })
         .style("fill", function(d) {
-          if (lookup[d][active_ymetric][year] == "") { return "#eaeaea" };
-          return color(+lookup[d][active_ymetric][year]) || "#eaeaea";
+          if (lookup[d][active_y_metric][year] == "") { return "#eaeaea" };
+          return color(+lookup[d][active_y_metric][year]) || "#eaeaea";
         })
       map_svg.selectAll("path.country")
         .transition(700)
@@ -1091,7 +1171,7 @@ d3.queue()
           if (exclude.indexOf(country) > -1) { return "#eaeaea"; }
           if (!(country in lookup)) { return "#eaeaea"; }
           var datum = lookup[country];
-          if (datum[active_ymetric][year] == "") { return "#eaeaea" };
+          if (datum[active_y_metric][year] == "") { return "#eaeaea" };
           return colorMap(+datum["ICGGD with Production Emissions"][year]) || "#eaeaea";
         })
     }
@@ -1124,12 +1204,12 @@ function reset_to_global(){
               .style("stroke", null);
 
             // de-highlight all circles
-            svg.selectAll(".bubble circle")
+            scatter_svg.selectAll(".bubble circle")
               .style("stroke", null)
               .style("stroke-width", null);
 
             // turn off displaying the bubble's text
-            svg.selectAll(".bubble text")
+            scatter_svg.selectAll(".bubble text")
               .style("display", "none");
 
             // hides the tooltip
@@ -1168,7 +1248,7 @@ function update_labels(){
         var datum = lookup[selected_country];
         d3.keys(datum).forEach(function(metric) {
 
-          if (datum[metric][year] && ((metric == active_ymetric) || (metric == active_metric)) ) {
+          if (datum[metric][year] && ((metric == active_y_metric) || (metric == active_x_metric)) ) {
 
             //console.log("appending to tooltip")
             //var div = tooltip.append("div");
@@ -1176,16 +1256,16 @@ function update_labels(){
             //div.append("span").text(metric_lookup[metric].format(+datum[metric][year]));
             //div.append("span").text(" " + metric_lookup[metric].units);
 
-            if(metric == active_metric){
+            if(metric == active_x_metric){
               // Update the value next to the x-axis label
-              d3.select(".active-metric-label").
+              d3.select(".active_x_metric-label").
               text(metric_lookup[metric].name + ": ") 
-              d3.select(".active-metric-label-value")
+              d3.select(".active_x_metric-label-value")
               .text(metric_lookup[metric].format(+datum[metric][year]) + " " + metric_lookup[metric].units);
             } else {
-              // is equal to active_ymetric
+              // is equal to active_y_metric
               // Update value next to the y-axis label
-              d3.selectAll(".active-ymetric-label").text(metric_lookup[active_ymetric].name + ": " + metric_lookup[active_ymetric].format(+datum[active_ymetric][year]) + " " + metric_lookup[active_ymetric].units);
+              d3.selectAll(".active_y_metric-label").text(metric_lookup[active_y_metric].name + ": " + metric_lookup[active_y_metric].format(+datum[active_y_metric][year]) + " " + metric_lookup[active_y_metric].units);
             }
 
           }
@@ -1196,7 +1276,7 @@ function update_labels(){
 
 function update_circles(){
             // uses the .raise() function to bring a point above others
-        svg.selectAll(".bubble")
+        scatter_svg.selectAll(".bubble")
           .filter(function(p) {
             return selected_country == p;
           })
@@ -1208,7 +1288,7 @@ function update_circles(){
 
 
         // setting style of circle to show bold line around circumference, display country name text
-            var selected_bubble = svg.selectAll(".bubble")
+            var selected_bubble = scatter_svg.selectAll(".bubble")
               .filter(function(p) {
                 return selected_country == p;
               })
