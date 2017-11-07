@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test41--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test42--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -112,14 +112,33 @@ path.country {
 var playing = true;
 var next_year_in_progress = false;
 var year = 2000;
-var active_metric = "CO2";
-var active_ymetric = "GDP";
+var active_metric = "Production CO2 Emissions Annual Change";
+var active_ymetric = "GDP percent change";
 var clicked_country = null;
 var selected_country = "WLD";
 
 var exclude = ["AFG", "COD", "LBY", "LCA", "LIE", "LSO", "MCO", "MDA", "NRU", "PRK", "ROU", "SMR", "SOM", "SSD", "SYR", "TLS", "TUV", "WLD"];
 
-var metrics = ["index_territorial", "consumption_co2", "GDP", "CO2", "abs_carbon", "life_expectancy_at_birth_total_years_sp_dyn_le00_in", "individuals_using_the_internet_of_population_it_net_user_z", "employment_to_population_ratio_15_total_modeled_ilo_est", "abs_gdp", "access_to_electricity_of_population_eg_elc_accs_zs", "household_final_consumption_expenditure_per_capita_constant_20", "merchandise_imports_current_us_tm_val_mrch_cd_wt", "industry_value_added_constant_2010_us_nv_ind_totl_kd", "net_migration_sm_pop_netm", "total_natural_resources_rents_of_gdp_ny_gdp_totl_rt_zs", "renewable_energy_consumption_of_total_final_energy_consumpti", "urban_population_of_total_sp_urb_totl_in_zs", "proportion_of_seats_held_by_women_in_national_parliaments"];
+var metrics = ["ICGGD with Production Emissions", 
+"ICGGD with Consumption Emissions", 
+"Consumption CO2 Emissions Annual Change", 
+"Consumption CO2 Emissions Absolute Value", 
+"Production CO2 Emissions Annual Change",
+"Production CO2 Emissions Absolute Value", 
+"GDP percent change", 
+"GDP",
+"life_expectancy_at_birth_total_years_sp_dyn_le00_in", 
+"individuals_using_the_internet_of_population_it_net_user_z", 
+"employment_to_population_ratio_15_total_modeled_ilo_est", 
+"access_to_electricity_of_population_eg_elc_accs_zs", 
+"household_final_consumption_expenditure_per_capita_constant_20", 
+"merchandise_imports_current_us_tm_val_mrch_cd_wt", 
+"industry_value_added_constant_2010_us_nv_ind_totl_kd", 
+"net_migration_sm_pop_netm", 
+"total_natural_resources_rents_of_gdp_ny_gdp_totl_rt_zs", 
+"renewable_energy_consumption_of_total_final_energy_consumpti", 
+"urban_population_of_total_sp_urb_totl_in_zs", 
+"proportion_of_seats_held_by_women_in_national_parliaments"];
 
 var format = d3.format(".0%");
 
@@ -136,26 +155,36 @@ function format_abbrev(x) {
 }
 
 var metric_lookup = {
-  "GDP": {
-    "key": "GDP",
-    "name": "GDP Change",
+  "ICGGD with Production Emissions": {
+    "key": "ICGGD with Production Emissions",
+    "name": "Territorial ICGGD",
     "units": "",
     "scale": "d3.scaleLinear",
-    "format": format,
-    "extent": [-0.3,0.3],
+    "format": default_format,
+    "extent": [-10,9],
     "longextent": [-0.5,3]
   },
-  "CO2": {
-    "key": "CO2",
+  "ICGGD with Consumption Emissions": {
+    "key": "ICGGD with Consumption Emissions",
+    "name": "Consumption ICGGD",
+    "units": "",
+    "scale": "d3.scaleLinear",
+    "format": default_format,
+    "extent": [-7,6],
+    "longextent": [-0.5,3]
+  },
+
+  "Production CO2 Emissions Annual Change": {
+    "key": "Production CO2 Emissions Annual Change",
     "name": "Fossil fuels and cement production emissions by country (territorial, GCB)",
     "units": "change based on Mt C",
     "scale": "d3.scaleLinear",
     "format": format,
-    "extent": [-0.3,0.3],
+    "extent": [-0.3,6],
     "longextent": [-0.5,3]
   },
-  "abs_carbon": {
-    "key": "abs_carbon",
+  "Production CO2 Emissions Absolute Value": {
+    "key": "Production CO2 Emissions Absolute Value",
     "name": "Fossil fuels and cement production emissions by country (territorial, GCB)",
     "units": "Mt C",
     "scale": "d3.scaleLinear",
@@ -163,8 +192,9 @@ var metric_lookup = {
     "extent": [0,10000],
     "longextent": [-0.5,3]
   },
-  "consumption_co2": {
-    "key": "consumption_co2",
+
+  "Consumption CO2 Emissions Annual Change": {
+    "key": "Consumption CO2 Emissions Annual Change",
     "name": "Consumption emissions (GCB)",
     "units": "change based on Mt C",
     "scale": "d3.scaleLinear",
@@ -172,15 +202,35 @@ var metric_lookup = {
     "extent": [-0.3,0.3],
     "longextent": [-0.5,3]
   },
-  "index_territorial": {
-    "key": "index_territorial",
-    "name": "Territorial ICGGD",
-    "units": "",
+  "Consumption CO2 Emissions Absolute Value": {
+    "key": "Consumption CO2 Emissions Absolute Value",
+    "name": "Consumption emissions (GCB)",
+    "units": "Mt C",
     "scale": "d3.scaleLinear",
-    "format": default_format,
-    "extent": [-1,2],
+    "format": format,
+    "extent": [0,2500],
     "longextent": [-0.5,3]
   },
+
+  "GDP percent change": {
+    "key": "GDP percent change",
+    "name": "Gross Domestic Product (GDP) Change",
+    "units": "",
+    "scale": "d3.scaleLinear",
+    "format": format,
+    "extent": [-0.3,0.3],
+    "longextent": [-0.5,3]
+  },
+  "GDP": {
+    "key": "GDP",
+    "name": "Gross Domestic Product (GDP)",
+    "units": "constant 2010 US$",
+    "scale": "d3.scaleLinear",
+    "format": format_si,
+    "extent": [0,2e13],
+    "longextent": [1,1e15]
+  },
+
   "life_expectancy_at_birth_total_years_sp_dyn_le00_in": {
     "key": "life_expectancy_at_birth_total_years_sp_dyn_le00_in",
     "name": "Life expectancy at birth, total",
@@ -201,15 +251,6 @@ var metric_lookup = {
     "units": "",
     "scale": "d3.scaleLinear",
     "format": format
-  },
-  "abs_gdp": {
-    "key": "abs_gdp",
-    "name": "GDP",
-    "units": "constant 2010 US$",
-    "scale": "d3.scaleLinear",
-    "format": format_si,
-    "extent": [0,2e13],
-    "longextent": [1,1e15]
   },
   "access_to_electricity_of_population_eg_elc_accs_zs": {
     "key": "access_to_electricity_of_population_eg_elc_accs_zs",
@@ -411,6 +452,12 @@ var radius = d3.scaleSqrt()
   .range([2.5,20])
   .domain([0, 3000]);
 
+
+
+// CHECK THIS OUT WITH CARNI, get on brand
+
+
+
 var color = d3.scaleThreshold()
   .domain([-0.05, -0.02, 0, 0.05, 0.1])
   .range(["#d73027","#f46d43","#fdae61","#abd9e9","#74add1","#4575b4"]);
@@ -418,6 +465,12 @@ var color = d3.scaleThreshold()
 var colorMap = d3.scaleThreshold()
   .domain([-0.05, 0, 0.5, 0.75, 1])
   .range(["#d73027","#f46d43","#fdae61","#abd9e9","#74add1","#4575b4"]);
+
+
+
+
+
+
 
 var xAxis = d3.axisBottom()
   .tickSize(-height)
@@ -488,12 +541,25 @@ d3.queue()
       lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["Country Name"]
     });
 
-  console.log(lookup)    
+  console.log(lookup)
+  console.log(all_data)    
     // logic for calculating extent, choosing preset if available
  
     metrics.forEach(function(metric) {
-      var calculated_extent = d3.extent(wb_data.filter(function(d) { return d.year.indexOf("-") < 0 && d.country_code !== "WLD"; }), function(d) { return +d[metric]; })
-      var calculated_long_extent = d3.extent(wb_data.filter(function(d) { return d.year.indexOf("-") > -1 && d.country_code !== "WLD"; }), function(d) { return +d[metric]; })
+
+      var data = all_data.filter(function(d) { return d["Indicator"]==metric && d["ISO"] !== "WLD";})
+      
+      var year_cols = [...Array(1+2015-2000).keys()].map(v => 2000+v).map(u => String(u))
+      var joined_data = []
+      var year
+      for (i = 0; i < year_cols.length; i++){
+        year = year_cols[i]
+        console.log(year)
+        joined_data = joined_data.concat(d3.extent(data, function(d){return +d[year]}))
+      }
+      var calculated_extent = d3.extent(joined_data)
+
+      var calculated_long_extent = d3.extent(data, function(d) { return +d["Summary Range"]; })
       
       // perhaps, won't need longextent? so don't set it as it's own variable?
       // preset is the default, if it is not present, will use the calcualted extent / long_extent
