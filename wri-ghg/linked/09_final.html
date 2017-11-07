@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test51--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test52--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -380,6 +380,23 @@ var scatter_svg = d3.select("body")
       .text(metric_lookup[active_x_metric].name);
 
 
+// What does this do? Placeholder for the value
+    scatter_svg.append("text")
+      .attr("x", width-2)
+      .attr("y", height-20)
+      .attr("text-anchor", "end")
+      .attr("class", "active_x_metric-label-value");
+
+
+var map_container = d3.select("body")
+  .append("div")
+    .style("width", map_width + "px")
+    .style("height", map_height + "px")
+    .style("position", "relative")
+    .style("display", "inline-block");
+
+// Add in selects below the map container
+
       var scatter_x_select = d3.select("body")
         .append('select')
           .attr('class','select_x')
@@ -407,7 +424,7 @@ var scatter_svg = d3.select("body")
           .text(function (d) { return d; });
 
       function change_x_metric() {
-        selectValue = d3.select('select_x').property('value')
+        selectValue = d3.select('.select_x').property('value')
         active_x_metric = selectValue
 
         console.log("active_x_metric is: " + active_x_metric)
@@ -427,7 +444,7 @@ var scatter_svg = d3.select("body")
       };
 
       function change_y_metric() {
-        selectValue = d3.select('select_y').property('value')
+        selectValue = d3.select('.select_y').property('value')
         active_y_metric = selectValue
 
         console.log("active_y_metric is: " + active_y_metric)
@@ -447,20 +464,6 @@ var scatter_svg = d3.select("body")
       };
 
 
-// What does this do? Placeholder for the value
-    scatter_svg.append("text")
-      .attr("x", width-2)
-      .attr("y", height-20)
-      .attr("text-anchor", "end")
-      .attr("class", "active_x_metric-label-value");
-
-
-var map_container = d3.select("body")
-  .append("div")
-    .style("width", map_width + "px")
-    .style("height", map_height + "px")
-    .style("position", "relative")
-    .style("display", "inline-block");
 
 d3.selectAll(".mouseover_checkbox")
 .on("change", function () { 
