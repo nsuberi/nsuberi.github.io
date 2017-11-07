@@ -380,7 +380,7 @@ var scatter_svg = d3.select("body")
       .text(metric_lookup[active_x_metric].name);
 
 
-      var scatter_x_select = scatter_svg
+      var scatter_x_select = d3.select("body")
         .append('select')
           .attr('class','select_x')
           .attr("x", width+10)
@@ -393,7 +393,7 @@ var scatter_svg = d3.select("body")
         .append('option')
           .text(function (d) { return d; });
 
-      var scatter_y_select = scatter_svg
+      var scatter_y_select = d3.select("body")
         .append('select')
           .attr('class','select_y')
           .attr("x", width+10)
