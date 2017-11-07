@@ -677,7 +677,7 @@ d3.queue()
 
     // Drawing middle lines - xaxis and yaxis
     // held constant on xscale(0) or yscale(0)
-    svg
+    scatter_svg
       .append("line")
       .attr("class", "dark-line-1")
       .style("stroke", "#777")
@@ -687,7 +687,7 @@ d3.queue()
       .attr("y1", 0)
       .attr("y2", height)
 
-    svg
+    scatter_svg
       .append("line")
       .attr("class", "dark-line-2")
       .style("stroke", "#777")
