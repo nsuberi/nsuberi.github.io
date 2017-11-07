@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test59--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test60--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -455,13 +455,14 @@ map_container
         console.log("active_x_metric is: " + active_x_metric)
 
 
-        if (String(year).indexOf("-") > -1) {
-          if (metric == "Consumption CO2 Emissions Annual Change") {
+        if (String(year).indexOf("Summary") > -1) {
+        /*  if (metric == "Consumption CO2 Emissions Annual Change") {
             year = "2000-2014";
           } else {
             year = "2000-2015";
           }
-        }
+        } */
+        year = "Summary Range"
         setYear_updateData(year);
         // will update in setYear_updateData
         //updateXScale(metric);
@@ -475,13 +476,15 @@ map_container
         console.log("active_y_metric is: " + active_y_metric)
 
 
-        if (String(year).indexOf("-") > -1) {
-          if (metric == "Consumption CO2 Emissions Annual Change") {
+        if (String(year).indexOf("Summary") > -1) {
+        /*  if (metric == "Consumption CO2 Emissions Annual Change") {
             year = "2000-2014";
           } else {
             year = "2000-2015";
           }
-        }
+        } */
+
+        year = "Summary Range"
         setYear_updateData(year);
         // will update in setYear_updateData
         //updateXScale(metric);
@@ -901,11 +904,13 @@ d3.queue()
 
           // Map from 2016 to summary periods, account for fact that Consumption CO2 Emissions Annual Change doesn't have data for 2015
           // Could get these measures from EORA later
-          if (active_x_metric == "Consumption CO2 Emissions Annual Change") {
+       /*   if (active_x_metric == "Consumption CO2 Emissions Annual Change") {
             year = "2000-2014";
           } else {
             year = "2000-2015";
-          }
+          } */
+
+          year = "Summary Range"
 
           // Should this just check whether currentTimeout exists?
           // Or stay checking whether next_year_in_progress is on?
@@ -993,7 +998,7 @@ d3.queue()
       }
 
       // Handle case if at end of period
-      if(String(year).indexOf("-") > -1){
+      if(String(year).indexOf("Summary") > -1){
 
         // Decide: turn off autoplay, or keep it on?
         // I think leave it on, and don't call next year
@@ -1010,12 +1015,14 @@ d3.queue()
       // Map 2016 to the summary data for whatever period data is availabl for
       if (year == 2016) {
 
-        if(active_x_metric == "Consumption CO2 Emissions Annual Change"){
+     /*   if(active_x_metric == "Consumption CO2 Emissions Annual Change"){
           // no 2015 data available, so default to period summary
           year = "2000-2014";
         } else {
           year = "2000-2015"
-        }
+        } */
+
+        year = "Summary Range"
 
         // update with this year, which will contain a "-" and trigger behavior in setYear_updateData
         setYear_updateData(year);
@@ -1046,7 +1053,7 @@ d3.queue()
       xscale = metric_lookup[active_x_metric].scale;
 
       // for 2000-2015 year ranges
-      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[active_x_metric]) {
+      if (String(year).indexOf("Summary") > -1 && "longextent" in metric_lookup[active_x_metric]) {
         xscale.domain(metric_lookup[active_x_metric].longextent);
       } else {
         xscale.domain(metric_lookup[active_x_metric].extent);
@@ -1078,7 +1085,7 @@ d3.queue()
       d3.selectAll(".active_y_metric-label-value").text(metric_lookup[active_y_metric].format(+datum[active_y_metric][year]) + " " + metric_lookup[active_y_metric].units);
 
       // for 2000-2015 year ranges
-      if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[active_y_metric]) {
+      if (String(year).indexOf("Summary") > -1 && "longextent" in metric_lookup[active_y_metric]) {
         yscale.domain(metric_lookup[active_y_metric].longextent);
       } else {
         yscale.domain(metric_lookup[active_y_metric].extent);
@@ -1105,15 +1112,17 @@ d3.queue()
       var summary_period = true;
 
       // If year is a range (2000-2014 or 2000-2015)
-      if (String(year).indexOf("-") > -1) {
+      if (String(year).indexOf("Summary") > -1) {
         summary_period = true;
 
         // Only behave differently with Consumption CO2 Emissions Annual Change if it is a summary-year
-        if (active_x_metric == "Consumption CO2 Emissions Annual Change") {
+       /* if (active_x_metric == "Consumption CO2 Emissions Annual Change") {
           year = "2000-2014";
         } else {
           year = "2000-2015";
-        }
+        } */
+
+        year = "Summary Range"
         year_label.text(year);
 
         // Reinfoce that the year slider should be at 2016 during this time range, summary selection
