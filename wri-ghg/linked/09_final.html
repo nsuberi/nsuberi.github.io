@@ -346,18 +346,6 @@ var scatter_svg = d3.select("body")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        // Label displaying which y-metric is active
-    scatter_svg.append("text")
-      .attr("x", 6)
-      .attr("y", -5)
-      .attr("class", "label active_y_metric-label")
-      // changed this, no longer including (units)
-      .text(metric_lookup[active_y_metric].name + ": ")
-
-/*    scatter_svg.append("text")
-      .attr("x", 6)
-      .attr("y", 15)
-      .attr("class", "active_y_metric-label-value");*/
 
       // Label displaying current years being shown
     var year_label = scatter_svg.append("text")
@@ -370,22 +358,6 @@ var scatter_svg = d3.select("body")
       .text("1999-2000");
       // Label showing which x-metric is active
 
-
-    scatter_svg.append("text")
-      .attr("x", scatter_width-2)
-      .attr("y", scatter_height-6)
-      .attr("text-anchor", "end")
-      .attr("class", "active_x_metric-label")
-      // changed this, no longer including (units)
-      .text(metric_lookup[active_x_metric].name);
-
-
-// What does this do? Placeholder for the value
-    scatter_svg.append("text")
-      .attr("x", scatter_width-2)
-      .attr("y", scatter_height-20)
-      .attr("text-anchor", "end")
-      .attr("class", "active_x_metric-label-value");
 
 
 var map_container = d3.select("body")
@@ -406,9 +378,12 @@ map_container
   .text(function(d) { return "World"; });
 
 // Add in selects below the map container
-
+// http://bl.ocks.org/jfreels/6734823
       var scatter_x_select = d3.select("body")
-        .append('select')
+        .append('div')
+        .attr('class','select_x_div')
+        
+      scatter_x_select.append('select')
           .attr('class','select_x')
           .attr("x", scatter_width+10)
           .attr("y", scatter_height+10)
@@ -420,12 +395,49 @@ map_container
         .append('option')
           .text(function (d) { return d; });
 
+      scatter_x_select.append("text")
+      //  .attr("x", scatter_width-2)
+      //  .attr("y", scatter_height-6)
+        .attr("text-anchor", "end")
+        .attr("class", "active_x_metric-label")
+        // changed this, no longer including (units)
+        .text(metric_lookup[active_x_metric].name);
+
+
+// What does this do? Placeholder for the value
+    scatter_x_select.append("text")
+    //  .attr("x", scatter_width-2)
+    //  .attr("y", scatter_height-20)
+      .attr("text-anchor", "end")
+      .attr("class", "active_x_metric-label-value");
+
+
+
+
+
       var scatter_y_select = d3.select("body")
-        .append('select')
+        .append('div')
+        .attr('class','select_y_div')
+
+      scatter_y_select.append('select')
           .attr('class','select_y')
           .attr("x", scatter_width+10)
-          .attr("y", scatter_height+30)
+          .attr("y", scatter_height+60)
           .on('change',change_y_metric)
+
+      // Label displaying which y-metric is active
+      scatter_y_select.append("text")
+      //  .attr("x", 6)
+      //  .attr("y", -5)
+        .attr("class", "label active_y_metric-label")
+        // changed this, no longer including (units)
+        .text(metric_lookup[active_y_metric].name + ": ")
+
+      scatter_y_select.append("text")
+      //  .attr("x", 6)
+      //  .attr("y", 15)
+        .attr("class", "active_y_metric-label-value");
+
 
       var y_select_options = scatter_y_select
         .selectAll('option')
