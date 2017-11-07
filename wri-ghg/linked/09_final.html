@@ -554,7 +554,6 @@ d3.queue()
       var year
       for (i = 0; i < year_cols.length; i++){
         year = year_cols[i]
-        console.log(year)
         joined_data = joined_data.concat(d3.extent(data, function(d){return +d[year]}))
       }
       var calculated_extent = d3.extent(joined_data)
@@ -639,7 +638,7 @@ d3.queue()
         // sort by absolute carbon amount
         // https://stackoverflow.com/questions/15704128/how-can-i-efficiently-convert-data-from-string-to-int-within-a-d3-method-chain
         // + converts a numeric string into a number
-        return +lookup[b]["abs_carbon"][year].replace(",","") - (+lookup[a]["abs_carbon"][year].replace(",",""));
+        return +lookup[b]["Production CO2 Emissions Absolute Value"][year].replace(",","") - (+lookup[a]["Production CO2 Emissions Absolute Value"][year].replace(",",""));
       })
       .attr("class", "bubble")
       .attr("transform", function(d) {
@@ -663,7 +662,7 @@ d3.queue()
       // the circle gets drawn here... above was only a reference
       // to the center of a bubble element
       .attr("r", function(d) {
-        return radius(+lookup[d]["abs_carbon"][year].replace(",",""));
+        return radius(+lookup[d]["Production CO2 Emissions Absolute Value"][year].replace(",",""));
       })
       .style("fill", function(d) {
         return "#777";
@@ -1073,8 +1072,8 @@ d3.queue()
         .duration(700)
         .attr("r", function(d) {
           // if no data, return previous radius
-          if (!(year in lookup[d]["abs_carbon"])) { return d3.select(this).attr("r"); }
-          return radius(+lookup[d]["abs_carbon"][year].replace(",","")) || 2;
+          if (!(year in lookup[d]["Production CO2 Emissions Absolute Value"])) { return d3.select(this).attr("r"); }
+          return radius(+lookup[d]["Production CO2 Emissions Absolute Value"][year].replace(",","")) || 2;
         })
         .style("fill", function(d) {
           if (lookup[d][active_ymetric][year] == "") { return "#eaeaea" };
