@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test57--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test58--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -119,12 +119,12 @@ var selected_country = "WLD";
 
 var exclude = ["AFG", "COD", "LBY", "LCA", "LIE", "LSO", "MCO", "MDA", "NRU", "PRK", "ROU", "SMR", "SOM", "SSD", "SYR", "TLS", "TUV", "WLD"];
 
-var metrics = ["ICGGD with Production Emissions", 
+var metrics = ["Production CO2 Emissions Annual Change",
+"Production CO2 Emissions Absolute Value", 
+"ICGGD with Production Emissions", 
 "ICGGD with Consumption Emissions", 
 "Consumption CO2 Emissions Annual Change", 
 "Consumption CO2 Emissions Absolute Value", 
-"Production CO2 Emissions Annual Change",
-"Production CO2 Emissions Absolute Value", 
 "GDP percent change", 
 "GDP",
 "life_expectancy_at_birth_total_years_sp_dyn_le00_in", 
@@ -140,14 +140,14 @@ var metrics = ["ICGGD with Production Emissions",
 "urban_population_of_total_sp_urb_totl_in_zs", 
 "proportion_of_seats_held_by_women_in_national_parliaments"];
 
-var y_metrics = ["ICGGD with Production Emissions", 
+var y_metrics = ["GDP percent change", 
+"GDP",
+"ICGGD with Production Emissions", 
 "ICGGD with Consumption Emissions", 
 "Consumption CO2 Emissions Annual Change", 
 "Consumption CO2 Emissions Absolute Value", 
 "Production CO2 Emissions Annual Change",
-"Production CO2 Emissions Absolute Value", 
-"GDP percent change", 
-"GDP"]
+"Production CO2 Emissions Absolute Value"]
 var x_metrics = metrics;
 
 
@@ -387,8 +387,8 @@ map_container
         
       var scatter_x_select = scatter_x_select_div.append('select')
           .attr('class','select_x')
-          .attr("x", scatter_width+10)
-          .attr("y", scatter_height+10)
+       //   .attr("x", scatter_width+10)
+       //   .attr("y", scatter_height+10)
           .on('change',change_x_metric)
 
       var x_select_options = scatter_x_select
@@ -397,13 +397,13 @@ map_container
         .append('option')
           .text(function (d) { return d; });
 
-      scatter_x_select_div.append("text")
+/*      scatter_x_select_div.append("text")
       //  .attr("x", scatter_width-2)
       //  .attr("y", scatter_height-6)
         .attr("text-anchor", "end")
         .attr("class", "active_x_metric-label")
         // changed this, no longer including (units)
-        .text(metric_lookup[active_x_metric].name);
+        .text(metric_lookup[active_x_metric].name); */
 
       // What does this do? Placeholder for the value
       scatter_x_select_div.append("text")
@@ -425,17 +425,17 @@ map_container
 
       var scatter_y_select = scatter_y_select_div.append('select')
           .attr('class','select_y')
-          .attr("x", scatter_width+10)
-          .attr("y", scatter_height+60)
+        //  .attr("x", scatter_width+10)
+        //  .attr("y", scatter_height+60)
           .on('change',change_y_metric)
 
       // Label displaying which y-metric is active
-      scatter_y_select_div.append("text")
+  /*    scatter_y_select_div.append("text")
       //  .attr("x", 6)
       //  .attr("y", -5)
         .attr("class", "label active_y_metric-label")
         // changed this, no longer including (units)
-        .text(metric_lookup[active_y_metric].name + ": ")
+        .text(metric_lookup[active_y_metric].name + ": ") */
 
       scatter_y_select_div.append("text")
       //  .attr("x", 6)
