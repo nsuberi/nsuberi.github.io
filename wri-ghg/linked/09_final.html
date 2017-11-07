@@ -638,6 +638,8 @@ d3.queue()
         // sort by absolute carbon amount
         // https://stackoverflow.com/questions/15704128/how-can-i-efficiently-convert-data-from-string-to-int-within-a-d3-method-chain
         // + converts a numeric string into a number
+        console.log(a)
+        console.log(b)
         return +lookup[b]["Production CO2 Emissions Absolute Value"][year].replace(",","") - (+lookup[a]["Production CO2 Emissions Absolute Value"][year].replace(",",""));
       })
       .attr("class", "bubble")
