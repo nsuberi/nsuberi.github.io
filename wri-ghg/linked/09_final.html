@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test58--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test59--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -647,6 +647,8 @@ d3.queue()
 
   console.log(lookup)
   console.log(all_data)    
+
+
     // logic for calculating extent, choosing preset if available
  
     metrics.forEach(function(metric) {
@@ -1038,7 +1040,7 @@ d3.queue()
     function updateXScale(active_x_metric) {
 
       datum = lookup[selected_country]
-      d3.selectAll(".active_x_metric-label").text(metric_lookup[active_x_metric].name);
+     // d3.selectAll(".active_x_metric-label").text(metric_lookup[active_x_metric].name);
       d3.selectAll(".active_x_metric-label-value").text(metric_lookup[active_x_metric].format(+datum[active_x_metric][year]) + " " + metric_lookup[active_x_metric].units);
 
       xscale = metric_lookup[active_x_metric].scale;
@@ -1072,7 +1074,8 @@ d3.queue()
     function updateYScale(active_y_metric) {
 
       datum = lookup[selected_country]
-      d3.selectAll(".active_y_metric-label").text(metric_lookup[active_y_metric].name + ": " + metric_lookup[active_y_metric].format(+datum[active_y_metric][year]) + " " + metric_lookup[active_y_metric].units);
+      // d3.selectAll(".active_y_metric-label").text(metric_lookup[active_y_metric].name);
+      d3.selectAll(".active_y_metric-label-value").text(metric_lookup[active_y_metric].format(+datum[active_y_metric][year]) + " " + metric_lookup[active_y_metric].units);
 
       // for 2000-2015 year ranges
       if (String(year).indexOf("-") > -1 && "longextent" in metric_lookup[active_y_metric]) {
