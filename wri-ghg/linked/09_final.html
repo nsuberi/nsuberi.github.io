@@ -395,6 +395,16 @@ var map_container = d3.select("body")
     .style("position", "relative")
     .style("display", "inline-block");
 
+map_container
+  .append("h3")
+  .attr("class", "country-label")
+  .attr("x", map_width-2)
+  .attr("y", -5)
+  .attr("text-anchor", "end")
+  .style("font-weight", "bold")
+  .style("font-size", "36px")
+  .text(function(d) { return "World"; });
+
 // Add in selects below the map container
 
       var scatter_x_select = d3.select("body")
@@ -515,10 +525,6 @@ map_container.append("a")
   .style("top", (map_height-40) + "px")
   .style("left", (map_width/2-40) + "px")
 
-d3.select("body")
-  .append("h3")
-  .attr("class", "country-label")
-  .text(function(d) { return "World"; });
 
 var xscale = d3.scaleLinear()
   .domain([-0.5,0.5])
