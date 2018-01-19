@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test66--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test67--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -390,7 +390,7 @@ d3.queue()
 
     // CALCULATE EXTENT FOR VARIABLES
     // TO DO: Hardcode for the data we're using
-    metric_lookup.forEach(function(metric) {
+    metric_lookup.keys().forEach(function(metric) {
 
       var data = all_data.filter(function(d) { return d["Indicator"]==metric && d["ISO"] !== "WLD";})
 
