@@ -1,0 +1,22 @@
+<html>
+<body>
+<div id='resp'></div>
+</body>
+
+</html>
+
+
+<script>
+
+
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "http://Users/nathansuberi/Documents/GitHub/nsuberi.github.io/wri-ghg/final-data/All\ Data\ Together.csv", true);
+xhr.onreadystatechange = function() {
+  if (xhr.readyState == 4) {
+    // WARNING! Might be injecting a malicious script!
+    document.getElementById("resp").innerHTML = xhr.responseText;
+  }
+}
+xhr.send();
+
+</script>

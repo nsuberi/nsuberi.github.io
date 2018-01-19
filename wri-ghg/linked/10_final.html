@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test63--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test65--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -376,8 +376,10 @@ map_svg.append("path")
 var lookup = {};
 
 d3.queue()
-  .defer(d3.csv, "../final-data/All\ Data\ Together.csv")
+//  .defer(d3.csv, "../final-data/All\ Data\ Together.csv")
+.defer(d3.csv, 'http://wri-public-data.s3.amazonaws.com/resourcewatch/ghg-gdp-data/all_data.csv')
   .await(function(error, all_data) {
+    console.log(all_data)
     all_data.forEach(function(d) {
       lookup[d["ISO"]] = lookup[d["ISO"]] || {};
       lookup[d["ISO"]][d["Indicator"]] = d;
