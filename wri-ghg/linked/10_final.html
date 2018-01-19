@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test74--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test75--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -127,6 +127,7 @@ var gdp_raw = "GDP";
 
 var active_x_metric = gdp_change
 var active_y_metric = co2_prod_change
+var radius_metric = co2_prod_raw
 
 var clicked_country = null;
 var selected_country = "WLD";
@@ -319,7 +320,7 @@ var yscale = d3.scaleLinear()
   .clamp("true");
 
 var radius = d3.scaleSqrt()
-  .domain([0, 20])
+  .domain([0, 3000])
   .range([2.5,20]);
 
 function colorWrapper(y,x){
@@ -486,7 +487,7 @@ d3.queue()
     group
       .append("circle")
       .attr("r", function(d) {
-        return radius(+lookup[d][active_y_metric][year].replace(",",""));
+        return radius(+lookup[d][radius_metric][year].replace(",",""));
       })
       .style("fill", function(d) {
         return "#777";
@@ -675,8 +676,8 @@ function transition_scatter_and_map() {
     .transition()
     .duration(700)
     .attr("r", function(d) {
-      if (!(year in lookup[d][active_y_metric])) { return d3.select(this).attr("r"); }
-      return radius(+lookup[d][active_y_metric][year].replace(",","")) || 2;
+      if (!(year in lookup[d][radius_metric])) { return d3.select(this).attr("r"); }
+      return radius(+lookup[d][radius_metric][year].replace(",","")) || 2;
     })
     .style("fill", function(d) {
       if (lookup[d][active_y_metric][year] == "") { return "#eaeaea" };
