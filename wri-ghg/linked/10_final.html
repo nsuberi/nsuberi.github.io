@@ -153,7 +153,7 @@ var metric_lookup = {
     "extent": [-0.3,.3],
     "longextent": [-0.5,3]
   },
-  "Production CO2 Emissions": {
+  "Production CO2 Emissions Absolute Value": {
     "key": "Production CO2 Emissions Absolute Value",
     "name": "Fossil fuels and cement production emissions by country (territorial, GCB)",
     "units": "Mt C",
@@ -172,7 +172,7 @@ var metric_lookup = {
     "extent": [-0.3,0.3],
     "longextent": [-0.5,3]
   },
-  "Consumption CO2 Emissions": {
+  "Consumption CO2 Emissions Absolute Value": {
     "key": "Consumption CO2 Emissions Absolute Value",
     "name": "Consumption emissions (GCB)",
     "units": "Mt C",
@@ -376,7 +376,7 @@ map_svg.append("path")
 var lookup = {};
 
 d3.queue()
-.defer(d3.csv, "../final-data/All\ Data\ Together.csv")
+.defer(d3.csv, "../final-data/All\ Data\ Together\ Concise.csv")
 //.defer(d3.csv, 'http://wri-public-data.s3.amazonaws.com/resourcewatch/ghg-gdp-data/all_data.csv')
   .await(function(error, all_data) {
     console.log(all_data)
