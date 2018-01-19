@@ -286,6 +286,24 @@ d3.selectAll(".autoplay_checkbox")
     }
 });
 
+d3.selectAll(".production_checkbox")
+.on("change", function () {
+    if(this.checked){
+      playing = true;
+      if(currentTimeout){
+        clearTimeout(currentTimeout)
+        nextYear();
+      }
+      return;
+    } else {
+      playing = false;
+      if(currentTimeout){
+        clearTimeout(currentTimeout)
+      }
+      return;
+    }
+});
+
 // TO DO: Switch between Production and Consumption
 
 /// SCALES, AXES, COLORS
@@ -370,7 +388,7 @@ d3.queue()
 
     // CALCULATE EXTENT FOR VARIABLES
     // TO DO: Hardcode for the data we're using
-    metrics.forEach(function(metric) {
+    metric_lookup.forEach(function(metric) {
 
       var data = all_data.filter(function(d) { return d["Indicator"]==metric && d["ISO"] !== "WLD";})
 
