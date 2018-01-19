@@ -91,7 +91,7 @@ path.country {
 </style>
 
 <body>
-<h1>Exploring Country-level GHG-GDP Divergence --test70--</h1>
+<h1>Exploring Country-level GHG-GDP Divergence --test71--</h1>
 <div style="border: 1px solid #d0d0d0; display: inline-block; padding: 8px 16px; font-size: 18px;">
   Time Range &nbsp;
   <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" style="width: 200px">
@@ -322,9 +322,24 @@ var radius = d3.scaleSqrt()
   .range([2.5,20])
   .domain([0, 3000]);
 
-var colorMap = d3.scaleLinear()
-  .domain([0, 180])
-  .range(["blue","red"]);
+function colorWrapper(y,x){
+  if(x==0) {x = .0000000001}
+  var val = Math.atan(y/x)
+  val = val*180/Math.PI
+  if(x>0){
+    return(colorMapPosX(val))
+  }else{
+    return(colorMapNegX(val)))
+  }
+}
+
+var colorMapPosX = d3.scaleLinear()
+  .domain([-135,-45,45,135])
+  .range(["white","blue","white","red"]);
+
+var colorMapNegX = d3.scaleLinear()
+  .domain([-135,-45,45,135])
+  .range(["white","red","white","blue"]);
 
 var xAxis = d3.axisBottom()
   .tickSize(-scatter_height)
@@ -523,8 +538,8 @@ d3.queue()
             if (!(country in lookup)) { return "#eaeaea"; }
             var datum = lookup[country];
             if (datum[active_y_metric][year] == "") { return "#eaeaea" };
-            var colorVar = Math.atan(datum[active_x_metric][year]/datum[active_y_metric][year])
-            return colorMap(colorVar) || "#eaeaea";
+            if (datum[active_x_metric][year] == "") { return "#eaeaea" };
+            return colorWrapper(datum[active_y_metric][year], datum[active_x_metric][year]) || "#eaeaea";
           })
           .on("click", function(d){
             clicked_country = d.properties.iso_a3;
@@ -667,8 +682,8 @@ function transition_scatter_and_map() {
     })
     .style("fill", function(d) {
       if (lookup[d][active_y_metric][year] == "") { return "#eaeaea" };
-      var colorVar = Math.atan(datum[active_x_metric][year]/datum[active_y_metric][year])
-      return colorMap(+lookup[d][active_y_metric][year]) || "#eaeaea";
+      if (lookup[d][active_x_metric][year] == "") { return "#eaeaea" };
+      return colorWrapper(lookup[d][active_y_metric][year], lookup[d][active_x_metric][year]) || "#eaeaea";
     })
   map_svg.selectAll("path.country")
     .transition(700)
@@ -678,7 +693,8 @@ function transition_scatter_and_map() {
       if (!(country in lookup)) { return "#eaeaea"; }
       var datum = lookup[country];
       if (datum[active_y_metric][year] == "") { return "#eaeaea" };
-      return colorMap(+datum["ICGGD with Production Emissions"][year]) || "#eaeaea";
+      if (datum[active_x_metric][year] == "") { return "#eaeaea" };
+      return colorWrapper(datum[active_y_metric][year], datum[active_x_metric][year]) || "#eaeaea";
     })
 }
 
