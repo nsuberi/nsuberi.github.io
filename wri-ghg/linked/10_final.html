@@ -502,8 +502,8 @@ map_svg.append("path")
 var lookup = {};
 
 d3.queue()
-.defer(d3.csv, "http://localhost:8000/wri-ghg/final-data/All_Data_Together_Concise.csv")
-//.defer(d3.csv, 'http://wri-public-data.s3.amazonaws.com/resourcewatch/ghg-gdp-data/all_data.csv')
+//.defer(d3.csv, "http://localhost:8000/wri-ghg/final-data/All_Data_Together_Concise.csv")
+.defer(d3.csv, '../final-data/All_Data_Together_Concise.csv')
   .await(function(error, all_data) {
     console.log(all_data)
     all_data.forEach(function(d) {
