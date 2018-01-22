@@ -368,18 +368,6 @@ d3.selectAll(".measurement_change_checkbox")
 
 /// SCALES, AXES, COLORS
 
-/*
-var xscale = d3.scaleLinear()
-  .domain([-0.5,0.5])
-  .range([0,scatter_width])
-  .clamp("true");
-
-var yscale = d3.scaleLinear()
-  .domain([-0.5,0.5])
-  .range([scatter_height,0])
-  .clamp("true");
-*/
-
 var radius = d3.scaleSqrt()
   .domain([0, 3000])
   .range([2.5,20]);
@@ -411,22 +399,6 @@ var colorMapNegX = d3.scaleLinear()
 function standardize(val, metric){
   return((val - mean[metric][year])/sd[metric][year])
 }
-
-/*
-var xAxis = d3.axisBottom()
-  .tickSize(-scatter_height)
-  .tickFormat(function(d) {
-    return format(d);
-  })
-  .scale(xscale);
-
-var yAxis = d3.axisLeft()
-  .tickFormat(function(d) {
-    return format(d);
-  })
-  .tickSize(-scatter_width)
-  .scale(yscale)
-*/
 
 function updateAxes(){
   updateXAxis()
@@ -489,9 +461,6 @@ var path = d3.geoPath()
     .projection(projection);
 
 var graticule = d3.geoGraticule();
-
-var idLookup = {};
-
 
 map_svg.append("defs").append("path")
     .datum(graticule.outline())
@@ -602,6 +571,8 @@ d3.queue()
       .style("stroke-width", 1)
       .attr("y1", 0)
       .attr("y2", scatter_height)
+      .attr("x1", scatter_width/2)
+      .attr("x2", scatter_width/2)
     scatter_svg
       .append("line")
       .attr("class", "dark-line-2")
@@ -609,8 +580,11 @@ d3.queue()
       .style("stroke-width", 1)
       .attr("x1", 0)
       .attr("x2", scatter_width)
+      .attr("y1", scatter_height/2)
+      .attr("y2", scatter_height/2)
 
     // All axes drawing occurs here
+    // Could use a logic check to draw axes if they don't yet exist, this works fine though
     updateAxes()
 
     var group = scatter_svg.selectAll("g.bubble")
