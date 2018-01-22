@@ -103,7 +103,7 @@ path.country {
 
 <body>
   <div id='header'>
-  <h1>Exploring Country-level GHG-GDP Divergence --test81--</h1>
+  <h1>Exploring Country-level GHG-GDP Divergence --test82--</h1>
   </div>
 
   <div id='info_and_controls'>
@@ -391,10 +391,10 @@ function colorWrapper(y,x){
 
 var colorMapPosX = d3.scaleLinear()
   .domain([-135,-45,45,135])
-  .range(["white","blue","white","red"]);
+  .range(["white","green","white","red"]);
 var colorMapNegX = d3.scaleLinear()
   .domain([-135,-45,45,135])
-  .range(["white","red","white","blue"]);
+  .range(["white","red","white","green"]);
 
 function standardize(val, metric){
   return((val - mean[metric][year])/sd[metric][year])
