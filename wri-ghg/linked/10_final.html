@@ -250,8 +250,8 @@ var metric_info = {
     "units": "Mt C",
     "scale": d3.scaleLinear().range([0,scatter_width]).clamp(true),
     "format": format_si,
-    "extent": [0,3000]
-    //"longextent":no summary values
+    "extent": [0,2000],
+    "longextent":[-200,1000]
   },
   "Production CO2 Emissions Percent Change": {
     "name": "Production CO2 Emissions Change",
@@ -266,8 +266,8 @@ var metric_info = {
     "units": "Mt C",
     "scale": d3.scaleLinear().range([0,scatter_width]).clamp(true),
     "format": value_format,
-    "extent": [-0.3,.3],
-    "longextent": [-0.5,3]
+    "extent": [-.3,.6],
+    "longextent": [-2,6]
   },
 
   "Consumption CO2 Emissions Absolute Value": {
@@ -276,7 +276,7 @@ var metric_info = {
     "scale": d3.scaleLinear().range([0,scatter_width]).clamp(true),
     "format": format_si,
     "extent": [0,2500],
-    //"longextent":no summary values
+    "longextent":[-200,1000]
   },
   "Consumption CO2 Emissions Percent Change": {
     "name": "Consumption CO2 Emissions Change",
@@ -291,8 +291,8 @@ var metric_info = {
     "units": "Mt C",
     "scale": d3.scaleLinear().range([0,scatter_width]).clamp(true),
     "format": value_format,
-    "extent": [-.5,.5],
-    "longextent": [-0.5,3]
+    "extent": [-2,4],
+    "longextent": [-2,6]
   },
 
   "GDP Absolute Value": {
@@ -300,8 +300,8 @@ var metric_info = {
     "units": "constant 2010 US$",
     "scale": d3.scaleLinear().range([scatter_height,0]).clamp(true),
     "format": format_si,
-    "extent": [6e7,1e13],
-    //"longextent":no summary values
+    "extent": [-1e12,9e12],
+    "longextent":[-1e11,1e12]
   },
   "GDP Percent Change": {
     "name": "Gross Domestic Product Change",
@@ -316,8 +316,8 @@ var metric_info = {
     "units": "constant 2010 US$",
     "scale": d3.scaleLinear().range([scatter_height,0]).clamp(true),
     "format": format_si,
-    "extent": [-0.5,1],
-    "longextent": [-.3,4]
+    "extent": [-3e10,6e11],
+    "longextent":[-1e11,1e12]
   }
 }
 
@@ -394,6 +394,11 @@ d3.select("#value_type_select")
   emissions_type = d3.select("#emissions_type_select").property("value")
   active_x_metric = variable_tree[value_type][emissions_type]
   active_y_metric = variable_tree[value_type]['GDP']
+  if(value_type == 'Percent Change'){
+    color_by_z = false
+  } else {
+    color_by_z = true
+  }
   refresh_graphic();
   return;
 });
@@ -404,11 +409,6 @@ d3.select("#emissions_type_select")
   emissions_type = this.value
   active_x_metric = variable_tree[value_type][emissions_type]
   active_y_metric = variable_tree[value_type]['GDP']
-  if(value_type == 'Percent Change'){
-    color_by_z = false
-  } else {
-    color_by_z = true
-  }
   refresh_graphic();
   return;
 });
