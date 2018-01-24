@@ -89,9 +89,9 @@ path.country {
 }
 
 #color_canvas svg {
-  /*background: conic-gradient(white,red, white, green, white);
+  background: conic-gradient(white,red, white, green, white);
   border-radius: 50%;
-  transform:rotate(45deg)*/
+  /*transform:rotate(45deg)*/
 }
 
 </style>
@@ -744,7 +744,79 @@ d3.queue()
 // End data load, scatter and map setup
 });
 
+// Creating the color_canvas
 
+// Implementation 1
+// https://stackoverflow.com/questions/35497551/d3-follow-mouse-coordinates
+var color_canvas_width = scatter_width + margin.left + margin.right
+var color_canvas_height = scatter_height + margin.top + margin.bottom
+var origin_x = color_canvas_width/2
+var origin_y = color_canvas_height/2
+
+var color_canvas = d3.select("#color_canvas")
+  .append('svg')
+    .attr("width", color_canvas_width)
+    .attr("height", color_canvas_height)
+
+color_canvas
+  .append("line")
+  .attr("class", "cc-dark-line")
+  .style("stroke", "#777")
+  .style("stroke-width", 2)
+  .attr("y1", 0)
+  .attr("y2", color_canvas_height)
+  .attr("x1", color_canvas_width/2)
+  .attr("x2", color_canvas_width/2)
+color_canvas
+  .append("line")
+  .attr("class", "cc-dark-line")
+  .style("stroke", "#777")
+  .style("stroke-width", 2)
+  .attr("x1", 0)
+  .attr("x2", color_canvas_width)
+  .attr("y1", color_canvas_height/2)
+  .attr("y2", color_canvas_height/2)
+//    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+/*
+color_canvas.append('circle')
+  .transition()
+  .attr('r', 100)
+  .attr('id', 'color_canvas_background')
+  .attr('transform','translate('+origin_x+','+origin_y+')')
+*/
+
+color_canvas.append('circle')
+  .attr('r', 20)
+  .attr('id', 'color_canvas_marker')
+  .attr('transform','translate('+origin_x+','+origin_y+')')
+
+// a measured in degrees
+function rotate_coords(x,y,a){
+  new_x = x * Math.cos(a*Math.PI/180) - y * Math.sin(a*Math.PI/180)
+  new_y = x * Math.sin(a*Math.PI/180) + y * Math.cos(a*Math.PI/180)
+  return [new_x, new_y]
+}
+
+color_canvas.on('mousemove', function() {
+    var coordinates = d3.mouse(this)
+    //var rotated_coords = rotate_coords(coordinates[0],coordinates[1],45)
+    draw_circle(coordinates)
+  })
+
+function draw_circle(coordinates){
+  var x = coordinates[0]
+  var y = coordinates[1]
+  var color_x = x - origin_x
+  var color_y = origin_y - y
+
+  d3.select('#color_canvas_marker')
+    .style('fill', function(){
+      return color_wrapper(color_y,color_x);
+    })
+    .attr("transform","translate("+x+","+y+")");
+
+}
 
 /// HELPER FUNCTIONS
 var currentTimeout;
