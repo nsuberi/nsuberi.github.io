@@ -91,7 +91,7 @@ path.country {
 #color_canvas svg {
   background: conic-gradient(white,red, white, green, white);
   border-radius: 50%;
-  transform:rotate(45deg)
+  /*transform:rotate(45deg)*/
 }
 
 </style>
@@ -749,8 +749,8 @@ d3.queue()
 // https://stackoverflow.com/questions/35497551/d3-follow-mouse-coordinates
 var color_canvas_width = scatter_width + margin.left + margin.right
 var color_canvas_height = scatter_height + margin.top + margin.bottom
-var origin_x = scatter_width/2
-var origin_y = scatter_height/2
+var origin_x = color_canvas_width/2
+var origin_y = color_canvas_height/2
 
 var color_canvas = d3.select("#color_canvas")
   .append('svg')
@@ -761,7 +761,7 @@ color_canvas
   .append("line")
   .attr("class", "cc-dark-line")
   .style("stroke", "#777")
-  .style("stroke-width", 1)
+  .style("stroke-width", 2)
   .attr("y1", 0)
   .attr("y2", color_canvas_height)
   .attr("x1", color_canvas_width/2)
@@ -770,16 +770,25 @@ color_canvas
   .append("line")
   .attr("class", "cc-dark-line")
   .style("stroke", "#777")
-  .style("stroke-width", 1)
+  .style("stroke-width", 2)
   .attr("x1", 0)
   .attr("x2", color_canvas_width)
   .attr("y1", color_canvas_height/2)
   .attr("y2", color_canvas_height/2)
 //    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+/*
 color_canvas.append('circle')
-  .attr('r', 15)
-  .attr('id', 'color_canvas_circle')
+  .transition()
+  .attr('r', 100)
+  .attr('id', 'color_canvas_background')
+  .attr('transform','translate('+origin_x+','+origin_y+')')
+*/
+
+color_canvas.append('circle')
+  .attr('r', 20)
+  .attr('id', 'color_canvas_marker')
+  .attr('transform','translate('+origin_x+','+origin_y+')')
 
 // a measured in degrees
 function rotate_coords(x,y,a){
@@ -790,9 +799,8 @@ function rotate_coords(x,y,a){
 
 color_canvas.on('mousemove', function() {
     var coordinates = d3.mouse(this)
-    console.log('hello')
-    var rotated_coords = rotate_coords(coordinates[0],coordinates[1],45)
-    draw_circle(rotated_coords)
+    //var rotated_coords = rotate_coords(coordinates[0],coordinates[1],45)
+    draw_circle(coordinates)
   })
 
 function draw_circle(coordinates){
@@ -801,7 +809,7 @@ function draw_circle(coordinates){
   var color_x = x - origin_x
   var color_y = origin_y - y
 
-  d3.select('#color_canvas_circle')
+  d3.select('#color_canvas_marker')
     .transition()
     .style('fill', function(){
       return color_wrapper(color_y,color_x);
