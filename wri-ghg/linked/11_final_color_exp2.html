@@ -244,6 +244,9 @@ function cc_update_points(xscale, yscale){
         }
         return 'translate('+xscale(x)+','+yscale(y)+')'
       })
+    .attr('r', function(d){
+      return d.r
+    })
   cc_group.selectAll('text')
     .attr('transform',function(d){
       var x = d.x
@@ -556,29 +559,33 @@ function point_info(i){
   // Use an intermediate scale to reformat to [-1,1] for pct coloring or [-3,3] for z coloring
   var center_x = (i%20) - 9.5
   var center_y = Math.floor(i/20) - 9.5
-  var degree = compass_degree(center_y, center_x)
+  var info = compass_info(center_y, center_x)
+  var degree = info[0]
+  var radius = cc_radius(info[1])
   var color = color_wrapper(center_y,center_x)
-  return{'id':i,'compass':degree,'color':color,'x':center_x,'y':center_y}
+  return{'id':i,'compass':degree,'color':color,'x':center_x,'y':center_y,'r':radius}
 }
 
-function compass_degree(y,x){
+function compass_info(y,x){
   // negative y means above the y-axis for d3
   var deg = Math.atan(y/x)
   deg = deg*180/Math.PI
   if(x>0){
     if(deg>=-45){
-      return deg - 45
+      deg = deg - 45
     } else {
-      return -135 - deg
+      deg = -135 - deg
     }
   } else {
     deg = -1*deg
     if(deg<=45){
-      return deg + 45
+      deg = deg + 45
     }else{
-      return 135 - deg
+      deg = 135 - deg
     }
   }
+  var rad = Math.sqrt(y**2 + x**2)
+  return [deg, rad]
 }
 
 
@@ -675,11 +682,11 @@ var pct_scale = d3.scaleLinear()
   .range([-1,1])
   .clamp(true)
 
+
 var cc_xscale_pct = d3.scaleLinear()
   .domain([-1,1])
   .range([0,cc_width])
   .clamp(true);
-
 var cc_yscale_pct = d3.scaleLinear()
   .domain([-1,1])
   .range([cc_height,0])
@@ -689,12 +696,14 @@ var cc_xscale_z = d3.scaleLinear()
   .domain([-3,3])
   .range([0,cc_width])
   .clamp(true);
-
 var cc_yscale_z = d3.scaleLinear()
   .domain([-3,3])
   .range([cc_height,0])
   .clamp(true);
 
+var cc_radius = d3.scaleLinear()
+  .domain([0, Math.sqrt(200)])
+  .range([6,cc_width/40])
 
 // Reference: https://github.com/d3/d3-format
 var percent_format = d3.format(".0%");
@@ -854,7 +863,6 @@ var cc_group = color_canvas.selectAll("g.cc_bubble")
   .style('opacity',1)
 
 cc_group.append('circle')
-    .attr('r', cc_width/40)
     .style('fill', function(d){
       return d.color
     })
@@ -922,7 +930,9 @@ color_canvas
   .attr("y1", cc_height/2)
   .attr("y2", cc_height/2)
 
-// Add in either interactive angle drawer, text, or combo
+// Add in linear axis showing country ranking
+// List countries in order below
+// Future work - use this metric to attempt correlations with other WBG data
 var color_explanation = d3.select('#explanation')
   .append("svg")
     .attr("width", cc_width + cc_margin.left + cc_margin.right)
@@ -930,6 +940,7 @@ var color_explanation = d3.select('#explanation')
   .append("g")
     .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + ")")
 
+color_explanation.append
 
 
 /// CHECKBOXES
