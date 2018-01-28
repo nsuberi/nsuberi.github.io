@@ -364,6 +364,43 @@ function transition_scatter_and_map() {
         if (datum[active_x_metric][year] == "") { return "#eaeaea" };
         return color_wrapper(datum[active_y_metric][year], datum[active_x_metric][year]) || "#eaeaea";
       })
+
+    // Color Line
+    color_line.selectAll("g.bubble")
+      .transition()
+      .duration(700)
+      .style("opacity", function(d) {
+        if (lookup[d][active_x_metric][year] == ""){return 0;}
+        if (lookup[d][active_y_metric][year] == ""){return 0;}
+        // Both metrics exist and are non-null
+        return 1;
+      })
+      .attr("transform", function(d) {
+        // Always stay at y=10
+        var compass_degree = color_wrapper(lookup[d][active_y_metric][year], lookup[d][active_x_metric][year], compass_degree=true)
+        return "translate(" + cl_xscale(compass_degree) + "," + 27 + ")"
+      });
+    color_line.selectAll("g.bubble circle")
+      .transition()
+      .duration(700)
+      .attr("r", function(d) {
+        if (!(year in lookup[d][radius_metric])) { return 0 }
+        if(String(year).indexOf("Summary") > -1){
+          emissions_type = d3.select("#emissions_type_select").property("value")
+          if(emissions_type == 'Production'){
+            return radius(+lookup[d][radius_metric][2015].replace(",",""));
+          } else {
+            return radius(+lookup[d][radius_metric][2014].replace(",",""));
+          }
+        } else {
+          return radius(+lookup[d][radius_metric][year].replace(",",""));
+        }
+      })
+      .style("fill", function(d) {
+        if (lookup[d][active_y_metric][year] == "") { return "#eaeaea" };
+        if (lookup[d][active_x_metric][year] == "") { return "#eaeaea" };
+        return color_wrapper(lookup[d][active_y_metric][year], lookup[d][active_x_metric][year]) || "#eaeaea";
+      })
 }
 
 function update_labels(){
@@ -471,16 +508,31 @@ function style_circle_selection(){
      .sort(function(a,b) {
             return +lookup[b][radius_metric][year].replace(",","") - (+lookup[a][radius_metric][year].replace(",",""));
           })
+  color_line.selectAll(".bubble")
+     .sort(function(a,b) {
+            return +lookup[b][radius_metric][year].replace(",","") - (+lookup[a][radius_metric][year].replace(",",""));
+          })
   // Raise and highlight selected bubble
-  var selected_bubble = scatter_svg.selectAll(".bubble")
+  var scatter_bubble = scatter_svg.selectAll(".bubble")
     .filter(function(p) {
       return selected_country == p;
     })
     .raise()
-  selected_bubble.select("circle")
+  scatter_bubble.select("circle")
     .style("stroke", "#111")
     .style("stroke-width", "2px");
-  selected_bubble.select("text")
+  scatter_bubble.select("text")
+    .style("display", null);
+
+  var color_bubble = color_line.selectAll(".bubble")
+    .filter(function(p) {
+      return selected_country == p;
+    })
+    .raise()
+  color_bubble.select("circle")
+    .style("stroke", "#111")
+    .style("stroke-width", "2px");
+  color_bubble.select("text")
     .style("display", null);
 }
 
@@ -524,6 +576,16 @@ function reset_to_global(){
       .style("stroke-width", ".2px");
     scatter_svg.selectAll(".bubble text")
       .style("display", "none");
+
+    color_line.selectAll(".bubble")
+     .sort(function(a,b) {
+            return +lookup[b][radius_metric][year].replace(",","") - (+lookup[a][radius_metric][year].replace(",",""));
+          })
+    color_line.selectAll(".bubble circle")
+      .style("stroke", "#111")
+      .style("stroke-width", ".2px");
+    color_line.selectAll(".bubble text")
+      .style("display", "none");
 }
 
 var color_map_neg_x = d3.scaleLinear()
@@ -532,8 +594,14 @@ var color_map_neg_x = d3.scaleLinear()
 var color_map_pos_x = d3.scaleLinear()
   .domain([-135,-45,45,135])
   .range(["white","red","white","green"]);
+var compass_map_neg_x = d3.scaleLinear()
+  .domain([-135,-45,45,135])
+  .range([0,90,0,-90]);
+var compass_map_pos_x = d3.scaleLinear()
+  .domain([-135,-45,45,135])
+  .range([0,-90,0,90]);
 
-function color_wrapper(y,x){
+function color_wrapper(y,x,compass_degree=false){
   if(x==0) {x = .0000000001}
 
   if(color_by_z){
@@ -543,11 +611,21 @@ function color_wrapper(y,x){
 
   var val = Math.atan(y/x)
   val = val*180/Math.PI
+
   if(x>0){
-    return(color_map_pos_x(val))
+    if(compass_degree){
+      return(compass_map_pos_x(val))
+    }else{
+      return(color_map_pos_x(val))
+    }
   }else{
-    return(color_map_neg_x(val))
+    if(compass_degree){
+      return(compass_map_neg_x(val))
+    }else{
+      return(color_map_neg_x(val))
+    }
   }
+
 }
 
 function standardize(val, metric){
@@ -704,6 +782,15 @@ var cc_yscale_z = d3.scaleLinear()
 var cc_radius = d3.scaleLinear()
   .domain([0, Math.sqrt(200)])
   .range([6,cc_width/40])
+
+var cl_xscale = d3.scaleLinear()
+  .domain([-90,90])
+  .range([0,cc_width])
+  .clamp(true)
+
+var cr_yscale = d3.scaleOrdinal()
+  .domain([0,1,2,3,4,5,6,7,8,9,10])
+  .range([0,cc_height*3/4])
 
 // Reference: https://github.com/d3/d3-format
 var percent_format = d3.format(".0%");
@@ -933,14 +1020,54 @@ color_canvas
 // Add in linear axis showing country ranking
 // List countries in order below
 // Future work - use this metric to attempt correlations with other WBG data
-var color_explanation = d3.select('#explanation')
+
+// data comes from: color_wrapper(datum[active_y_metric][year], datum[active_x_metric][year])
+
+// Takes up 1/4 of the cc_height
+var color_line = d3.select('#explanation')
   .append("svg")
     .attr("width", cc_width + cc_margin.left + cc_margin.right)
-    .attr("height", cc_height + cc_margin.top + cc_margin.bottom)
+    .attr("height", cc_height/4 + cc_margin.top)
+      .style('border', '1px solid #d0d0d0')
   .append("g")
     .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + ")")
 
-color_explanation.append
+color_line.append("g")
+  .attr("transform", "translate(0," + (cc_height)/8 + ")")
+  .attr("class", "color_line_x axis");
+
+color_line.selectAll(".color_line_x.axis text")
+  .attr("y", 8);
+
+var cl_xAxis = d3.axisBottom()
+  .tickValues([...Array(13).keys()].map(i=>i*15).map(i=>i-90))
+  .tickFormat(value_format)
+  .scale(cl_xscale);
+color_line.select(".color_line_x.axis")
+  .transition()
+  .call(cl_xAxis);
+color_line.selectAll(".color_line_x.axis text")
+  .transition()
+  .attr("y", 8);
+
+
+// Takes up 3/4 of the cc_height
+var country_rankings = d3.select('#explanation')
+  .append("svg")
+    .attr("width", cc_width + cc_margin.left + cc_margin.right)
+    .attr("height", cc_height*(3/4) + cc_margin.bottom)
+    .style('border', '1px solid #d0d0d0')
+  .append("g")
+    .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + (cc_height + cc_margin.top + cc_margin.bottom)/4 + ")")
+country_rankings.append("g")
+  .attr("transform", "translate(0,0)")
+  .attr("class", "cntry_ranking_y axis");
+
+country_rankings.selectAll(".cntry_ranking_y.axis text")
+  .attr("x", -8);
+
+
+
 
 
 /// CHECKBOXES
@@ -1198,6 +1325,45 @@ d3.queue()
         }
       })
     // End scatterplot setup
+
+    // DRAW COLOR LINE
+
+    var cl_group = color_line.selectAll("g.bubble")
+      .data(countries)
+      .enter().append("g")
+      .attr("class", "bubble")
+
+    cl_group
+      .append("text")
+      .attr("y", -20)
+      .attr("text-anchor", "middle")
+      .style("font-weight", "bold")
+      .text(function(d) {
+        return d in lookup ? lookup[d].name : "";
+      })
+      .style("display", "none");
+
+    cl_group
+      .append("circle")
+      .on("click", function(d) {
+        clicked_country = d
+        d3.select(".mouseover_checkbox")
+        .property("checked", true)
+        update_to_selected_region(clicked_country);
+      })
+      .on("mouseover", function(d) {
+        var country = d;
+        if (!clicked_country) {
+          if (countries.indexOf(country) == -1) { return "#eaeaea"; }
+          if (!(country in lookup)) { return "#eaeaea"; }
+          update_to_selected_region(country)
+        }
+      })
+      .on("mouseout", function() {
+        if (!clicked_country) {
+          reset_to_global()
+        }
+      })
 
 
     // DRAW MAP
