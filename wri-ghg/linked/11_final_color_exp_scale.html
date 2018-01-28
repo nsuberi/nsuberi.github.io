@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://use.typekit.net/ezo4zbn.css">
+<style type="text/css">
+
+body {
+  margin: 20px;
+  font-family: acumin-pro-condensed, arial, sans;
+  line-height: 1.3em;
+  width: 1180px;
+}
+h3 {
+  margin: 0 0 4px 4px;
+  line-height: 1.05em;
+}
+
+.country-label{
+  font-weight:bold;
+  font-size:26;
+}
+.label {
+  font-size: 18px;
+}
+
+.axis text {
+  font-size: 14px;
+  fill: #333;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke-width:1px;
+  stroke: #e7e7e7;
+}
+
+circle {
+  stroke: #111;
+  stroke-width: .2px;
+  opacity: 0.8;
+}
+.bubble {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+path.country {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+.stroke {
+  fill: none;
+  stroke: #bbb;
+  stroke-width: 2px;
+}
+.fill {
+  fill: #fff;
+}
+.graticule {
+  fill: none;
+  stroke: #777;
+  stroke-width: 0.5px;
+  stroke-opacity: 0.5;
+}
+.land {
+  fill: #ddd;
+}
+.boundary {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 0.5px;
+}
+
+#year-slider {
+  margin: 0 0px 0 0;
+}
+.year-label{
+  font-weight:bold;
+  font-size:26;
+}
+
+#controls {
+  border: 1px solid #d0d0d0;
+  display: inline-block;
+  padding: 8px 16px;
+  font-size: 18px;
+}
+.checkbox {
+  width: 20
+}
+
+#color_canvas svg {
+  /*background: conic-gradient(white,red, white, green, white);
+  border-radius: 50%;
+  transform:rotate(45deg)*/
+}
+
+</style>
+
+<body>
+  <div id='header'>
+  <h1>Exploring Country-level GHG-GDP Divergence --test83--</h1>
+  </div>
+
+  <div id='info_and_controls'>
+    <div id='controls'>
+      <div id='info'>
+        <p> Use this tool to explore the relationship between economic growth (GDP) and carbon emissions around the world. </p>
+      </div>
+      <div id='slider_and_checkboxes'>
+        Time Range &nbsp;
+        <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" />
+        <text class="year-label">1999-2000</text>
+
+        <input type="checkbox" class="checkbox autoplay_checkbox" checked />
+        Autoplay?
+
+        <input type="checkbox" class="checkbox mouseover_checkbox" />
+        Mouseover lock?
+      </div>
+      <div id='dropdowns_with_text'>
+        <p>View
+          <select class="select" id="value_type_select">
+            <option value='Percent Change'>Percent Change</option>
+            <option value='Absolute Change'>Absolute Change</option>
+            <option value='Absolute Value'>Amount</option>
+          </select>
+          of GDP and
+          <select class="select" id="emissions_type_select">
+            <option value='Production'>Production</option>
+            <option value='Consumption'>Consumption</option>
+          </select>
+          CO2 Emissions</p>
+      </div>
+    </div>
+    <div id='graphs_and_labels'>
+      <br/>
+      <div class='header_labels'>
+        <text class='country-label'>World</text>
+        <text class='active_x_metric-label'>Gross Domestic Product Change</text>
+        <text class='active_x_metric-value'></text>
+        <text>/</text>
+        <text class='active_y_metric-label'>Production Emissions Change</text>
+        <text class='active_y_metric-value'></text>
+      </div>
+    </div>
+  </div>
+
+  <div id='scatter_and_map'></div>
+
+  <div id='explainer_section'>
+    Demonstrate how colors are given
+    <div id='color_canvas'></div>
+    <div id='explanation'></div>
+  </div>
+
+</body>
+
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://unpkg.com/topojson-client@3"></script>
+<script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+
+<!--http://leaverou.github.io/conic-gradient/-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js"></script>
+<script src="../css/conic-gradient.js"></script>
+
+<script>
+
+/// HELPER FUNCTIONS
+
+function nextYear() {
+  next_year_in_progress=true;
+  if (!playing) {
+    return;
+  }
+  if(String(year).indexOf("Summary") > -1){
+    next_year_in_progress=false;
+    return;
+  }
+  year++;
+  if (year == 2016) {
+    year = "Summary Range"
+    refresh_graphic();
+    next_year_in_progress=false;
+    return;
+  } else if(year < 2016) {
+      refresh_graphic();
+      currentTimeout = setTimeout(nextYear, 1100);
+    return;
+  }
+};
+
+function update_cc_axes(){
+  if(color_by_z){
+    var cc_format = value_format
+    var cc_xscale = cc_xscale_z
+    var cc_yscale = cc_yscale_z
+    var unit = ' σ'
+  } else {
+    var cc_format = percent_format
+    var cc_xscale = cc_xscale_pct
+    var cc_yscale = cc_yscale_pct
+    var unit = ' %'
+  }
+  cc_update_x_axis(cc_format, cc_xscale, unit)
+  cc_update_y_axis(cc_format, cc_yscale, unit)
+  cc_update_points(cc_xscale, cc_yscale)
+}
+function cc_update_x_axis(format, xscale, unit) {
+  var cc_xAxis = d3.axisBottom()
+    .tickSize(-cc_width)
+    .tickFormat(format)
+    .scale(xscale);
+  color_canvas.select(".x.axis")
+    .transition()
+    .call(cc_xAxis);
+  color_canvas.selectAll(".x.axis text")
+    .transition()
+    .attr("y", 8);
+  color_canvas.select('.cc_active_x_metric-axis_label')
+    .text(metric_info[active_x_metric].name + unit)
+};
+function cc_update_y_axis(format, yscale, unit) {
+  var cc_yAxis = d3.axisLeft()
+    .tickSize(-cc_height)
+    .tickFormat(format)
+    .scale(yscale);
+  color_canvas.select(".y.axis")
+    .transition()
+    .call(cc_yAxis);
+  color_canvas.select('.cc_active_y_metric-axis_label')
+    .text(metric_info[active_y_metric].name + unit)
+};
+function cc_update_points(xscale, yscale){
+  cc_group.selectAll('circle')
+    .attr('transform',function(d){
+        var x = d.x
+        var y = d.y
+        if(color_by_z){
+          x = z_scale(x)
+          y = z_scale(y)
+        } else {
+          x = pct_scale(x)
+          y = pct_scale(y)
+        }
+        return 'translate('+xscale(x)+','+yscale(y)+')'
+      })
+    .attr('r', function(d){
+      return d.r
+    })
+  cc_group.selectAll('text')
+    .attr('transform',function(d){
+      var x = d.x
+      var y = d.y
+      if(color_by_z){
+        x = z_scale(x)
+        y = z_scale(y)
+      } else {
+        x = pct_scale(x)
+        y = pct_scale(y)
+      }
+      return 'translate('+xscale(x)+','+yscale(y)+')'
+    })
+}
+
+function refresh_graphic(){
+  update_x_axis();
+  update_y_axis();
+  update_labels();
+  transition_scatter_and_map();
+  style_circle_selection();
+  style_map_selection();
+}
+
+function update_x_axis() {
+  xscale = metric_info[active_x_metric].scale;
+  // for Summary ranges
+  if (String(year).indexOf("Summary") > -1) {
+    xscale.domain(metric_info[active_x_metric].longextent);
+  } else {
+    xscale.domain(metric_info[active_x_metric].extent);
+  }
+  var xAxis = d3.axisBottom()
+    .tickSize(-scatter_width)
+    .tickFormat(metric_info[active_x_metric].format)
+    .scale(xscale);
+  scatter_svg.select(".x.axis")
+    .transition()
+    .call(xAxis);
+  d3.selectAll(".dark-line-1")
+    .transition()
+    .attr("x1", xscale(0))
+    .attr("x2", xscale(0))
+  scatter_svg.selectAll(".x.axis text")
+    .transition()
+    .attr("y", 8);
+};
+
+function update_y_axis(metric) {
+  yscale = metric_info[active_y_metric].scale;
+  // for 2000-2015 year ranges
+  if (String(year).indexOf("Summary") > -1) {
+    yscale.domain(metric_info[active_y_metric].longextent);
+  } else {
+    yscale.domain(metric_info[active_y_metric].extent);
+  }
+  var yAxis = d3.axisLeft()
+    .tickSize(-scatter_height)
+    .tickFormat(metric_info[active_y_metric].format)
+    .scale(yscale);
+  scatter_svg.select(".y.axis")
+    .transition()
+    .call(yAxis);
+  d3.selectAll(".dark-line-2")
+    .transition()
+    .attr("y1", yscale(0))
+    .attr("y2", yscale(0))
+};
+
+function transition_scatter_and_map() {
+  // Color, size, and position scatter circles
+  scatter_svg.selectAll("g.bubble")
+    .transition()
+    .duration(700)
+    .style("opacity", function(d) {
+      if (lookup[d][active_x_metric][year] == ""){return 0;}
+      if (lookup[d][active_y_metric][year] == ""){return 0;}
+      // Both metrics exist and are non-null
+      return 1;
+    })
+    .attr("transform", function(d) {
+      return "translate(" + xscale(+lookup[d][active_x_metric][year]) + "," + yscale(+lookup[d][active_y_metric][year]) + ")"
+    });
+  scatter_svg.selectAll("g.bubble circle")
+    .transition()
+    .duration(700)
+    .attr("r", function(d) {
+      if (!(year in lookup[d][radius_metric])) { return 0 }
+      if(String(year).indexOf("Summary") > -1){
+        emissions_type = d3.select("#emissions_type_select").property("value")
+        if(emissions_type == 'Production'){
+          return radius(+lookup[d][radius_metric][2015].replace(",",""));
+        } else {
+          return radius(+lookup[d][radius_metric][2014].replace(",",""));
+        }
+      } else {
+        return radius(+lookup[d][radius_metric][year].replace(",",""));
+      }
+    })
+    .style("fill", function(d) {
+      if (lookup[d][active_y_metric][year] == "") { return "#eaeaea" };
+      if (lookup[d][active_x_metric][year] == "") { return "#eaeaea" };
+      return color_wrapper(lookup[d][active_y_metric][year], lookup[d][active_x_metric][year]) || "#eaeaea";
+    })
+
+    // Color Map
+    map_svg.selectAll("path.country")
+      .transition(700)
+      .style("fill", function(d) {
+        var country = d.properties.iso_a3
+        if (countries.indexOf(country) == -1) { return "#eaeaea"; }
+        if (!(country in lookup)) { return "#eaeaea"; }
+        var datum = lookup[country];
+        if (datum[active_y_metric][year] == "") { return "#eaeaea" };
+        if (datum[active_x_metric][year] == "") { return "#eaeaea" };
+        return color_wrapper(datum[active_y_metric][year], datum[active_x_metric][year]) || "#eaeaea";
+      })
+
+    // Color Line
+    color_line.selectAll("g.bubble")
+      .transition()
+      .duration(700)
+      .style("opacity", function(d) {
+        if (lookup[d][active_x_metric][year] == ""){return 0;}
+        if (lookup[d][active_y_metric][year] == ""){return 0;}
+        // Both metrics exist and are non-null
+        return 1;
+      })
+      .attr("transform", function(d) {
+        // Always stay at y=10
+        var compass_degree = color_wrapper(lookup[d][active_y_metric][year], lookup[d][active_x_metric][year], compass_degree=true)
+        return "translate(" + cl_xscale(compass_degree) + "," + 27 + ")"
+      });
+    color_line.selectAll("g.bubble circle")
+      .transition()
+      .duration(700)
+      .attr("r", function(d) {
+        if (!(year in lookup[d][radius_metric])) { return 0 }
+        if(String(year).indexOf("Summary") > -1){
+          emissions_type = d3.select("#emissions_type_select").property("value")
+          if(emissions_type == 'Production'){
+            return radius(+lookup[d][radius_metric][2015].replace(",",""));
+          } else {
+            return radius(+lookup[d][radius_metric][2014].replace(",",""));
+          }
+        } else {
+          return radius(+lookup[d][radius_metric][year].replace(",",""));
+        }
+      })
+      .style("fill", function(d) {
+        if (lookup[d][active_y_metric][year] == "") { return "#eaeaea" };
+        if (lookup[d][active_x_metric][year] == "") { return "#eaeaea" };
+        return color_wrapper(lookup[d][active_y_metric][year], lookup[d][active_x_metric][year]) || "#eaeaea";
+      })
+
+    // Country ranking
+
+}
+
+function update_labels(){
+  datum = lookup[selected_country]
+
+  country_name = datum.name
+  d3.select(".country-label").text(country_name);
+
+  // Setting year slider and year hints for x & y axes
+  if (String(year).indexOf("Summary") > -1) {
+    // Is a Summary Rnage
+    d3.select(".year-label").text(year)
+    d3.select("#year-slider").node().value = 2016;
+
+    d3.select(".active_y_metric-axis_label")
+      .text(metric_info[active_y_metric].name + ": " + lookup[selected_country][active_y_metric]['Summary Range Years'])
+    if ((selected_country=='WLD') && d3.select("#emissions_type_select").property("value") == 'Consumption'){
+      // Global Consumption Emissions
+      d3.select(".active_x_metric-axis_label")
+        .text(metric_info[active_x_metric].name + ": " + '2000-2014')
+    } else {
+      // Not Global Consumption Emissions
+      d3.select(".active_x_metric-axis_label")
+        .text(metric_info[active_x_metric].name + ": " + lookup[selected_country][active_x_metric]['Summary Range Years'])
+    }
+
+  } else {
+    // Not a Summary Range
+    if(d3.select("#value_type_select").property("value") == 'Absolute Value'){
+      // Showing data for a single year
+      d3.select(".year-label").text(year)
+      d3.select("#year-slider").node().value = year;
+
+      d3.select(".active_x_metric-axis_label")
+        .text(metric_info[active_x_metric].name + ": " + year)
+      d3.select(".active_y_metric-axis_label")
+        .text(metric_info[active_y_metric].name + ": " + year)
+    } else {
+      // Showing data for a range of years
+      var year_range = (year-1) + "-" + year
+      d3.select(".year-label").text(year_range)
+      d3.select("#year-slider").node().value = year;
+
+      d3.select(".active_x_metric-axis_label")
+        .text(metric_info[active_x_metric].name + ": " + year_range)
+      d3.select(".active_y_metric-axis_label")
+        .text(metric_info[active_y_metric].name + ": " + year_range)
+    }
+  }
+
+  // Setting label at top w/ values for displayed metrics
+  d3.select(".active_x_metric-label")
+    .text(metric_info[active_x_metric].name + ": ")
+  d3.select(".active_y_metric-label")
+    .text(metric_info[active_y_metric].name + ": ")
+
+  if(active_x_metric in datum && year in datum[active_x_metric]){
+    xval = +datum[active_x_metric][year]
+    if(xval == ""){
+      d3.select(".active_x_metric-value")
+        .text("-- " + metric_info[active_x_metric].units);
+    }else{
+      d3.select(".active_x_metric-value")
+        .text(metric_info[active_x_metric].format(xval) + " " + metric_info[active_x_metric].units);
+    }
+  } else {
+    d3.select(".active_x_metric-value")
+      .text("-- " + metric_info[active_x_metric].units);
+  }
+
+  if(active_y_metric in datum && year in datum[active_y_metric]){
+    yval = +datum[active_y_metric][year]
+    if(yval == ""){
+      d3.select(".active_y_metric-value")
+        .text("-- " + metric_info[active_y_metric].units);
+    }else{
+      d3.select(".active_y_metric-value")
+        .text(metric_info[active_y_metric].format(yval) + " " + metric_info[active_y_metric].units);
+    }
+  } else {
+    d3.select(".active_y_metric-value")
+      .text("-- " + metric_info[active_y_metric].units);
+  }
+
+  //No world data for consumption emissions available, use production emissions instead
+  if ((selected_country=='WLD') && (d3.select("#emissions_type_select").property('value') == 'Consumption')){
+    var value_type = d3.select("#value_type_select").property('value')
+    console.log('value type: ' + value_type)
+    if(value_type == 'Percent Change'){
+      d3.select(".active_x_metric-value")
+        .text(metric_info[co2_prod_pct_change].format(+datum[co2_prod_pct_change][year]) + " " + metric_info[co2_prod_pct_change].units);
+    } else if (value_type == 'Absolute Change') {
+      d3.select(".active_x_metric-value")
+        .text(metric_info[co2_prod_abs_change].format(+datum[co2_prod_abs_change][year]) + " " + metric_info[co2_prod_abs_change].units);
+    } else {
+      d3.select(".active_x_metric-value")
+        .text(metric_info[co2_prod_raw].format(+datum[co2_prod_raw][year]) + " " + metric_info[co2_prod_raw].units);
+    }
+  }
+};
+
+function style_circle_selection(){
+  // Reset order
+  scatter_svg.selectAll(".bubble")
+     .sort(function(a,b) {
+            return +lookup[b][radius_metric][year].replace(",","") - (+lookup[a][radius_metric][year].replace(",",""));
+          })
+  color_line.selectAll(".bubble")
+     .sort(function(a,b) {
+            return +lookup[b][radius_metric][year].replace(",","") - (+lookup[a][radius_metric][year].replace(",",""));
+          })
+  // Raise and highlight selected bubble
+  var scatter_bubble = scatter_svg.selectAll(".bubble")
+    .filter(function(p) {
+      return selected_country == p;
+    })
+    .raise()
+  scatter_bubble.select("circle")
+    .style("stroke", "#111")
+    .style("stroke-width", "2px");
+  scatter_bubble.select("text")
+    .style("display", null);
+
+  var color_bubble = color_line.selectAll(".bubble")
+    .filter(function(p) {
+      return selected_country == p;
+    })
+    .raise()
+  color_bubble.select("circle")
+    .style("stroke", "#111")
+    .style("stroke-width", "2px");
+  color_bubble.select("text")
+    .style("display", null);
+}
+
+function style_map_selection(){
+  if(selected_country!='WLD'){
+    map_svg.selectAll("path.country")
+      .style("opacity", function(p) {
+        // for TopoJSON: return isoLookup[p.id]['alpha-3'] == String(selected_country) ? 1 : 0.3;
+        return p.properties.iso_a3 == String(selected_country) ? 1 : 0.3;
+      })
+      .style("stroke", function(p) {
+        // for TopoJSON: return isoLookup[p.id]['alpha-3'] == String(selected_country) ? "#222" : null;
+        return p.properties.iso_a3 == String(selected_country) ? "#222" : null;
+      });
+  }
+}
+
+function update_to_selected_region(region_name) {
+    reset_to_global();
+    selected_country = region_name
+    style_circle_selection();
+    style_map_selection();
+    update_labels();
+}
+
+function reset_to_global(){
+    selected_country = "WLD";
+    update_labels();
+    // Clear map styles
+    map_svg.selectAll("path.country")
+      .style("opacity", 1)
+      .style("stroke", null);
+
+    // Reorder, restyle scatter
+    scatter_svg.selectAll(".bubble")
+     .sort(function(a,b) {
+            return +lookup[b][radius_metric][year].replace(",","") - (+lookup[a][radius_metric][year].replace(",",""));
+          })
+    scatter_svg.selectAll(".bubble circle")
+      .style("stroke", "#111")
+      .style("stroke-width", ".2px");
+    scatter_svg.selectAll(".bubble text")
+      .style("display", "none");
+
+    color_line.selectAll(".bubble")
+     .sort(function(a,b) {
+            return +lookup[b][radius_metric][year].replace(",","") - (+lookup[a][radius_metric][year].replace(",",""));
+          })
+    color_line.selectAll(".bubble circle")
+      .style("stroke", "#111")
+      .style("stroke-width", ".2px");
+    color_line.selectAll(".bubble text")
+      .style("display", "none");
+}
+
+function color_wrapper(y,x,compass_degree=false){
+  if(x==0) {x = .0000000001}
+
+  if(color_by_z){
+    x = standardize(x, active_x_metric)
+    y = standardize(y, active_y_metric)
+  }
+
+  var val = Math.atan(y/x)
+  val = val*180/Math.PI
+
+  if(x>0){
+    if(compass_degree){
+      return(compass_map_pos_x(val))
+    }else{
+      return(color_map_pos_x(val))
+    }
+  }else{
+    if(compass_degree){
+      return(compass_map_neg_x(val))
+    }else{
+      return(color_map_neg_x(val))
+    }
+  }
+
+}
+
+function standardize(val, metric){
+  return((val - mean[metric][year])/sd[metric][year])
+}
+
+function point_info(i){
+  // Outputs points on a range [-10,10]
+  // Use an intermediate scale to reformat to [-1,1] for pct coloring or [-3,3] for z coloring
+  var center_x = (i%20) - 9.5
+  var center_y = Math.floor(i/20) - 9.5
+  var info = compass_info(center_y, center_x)
+  var degree = info[0]
+  var radius = cc_radius(info[1])
+  var color = color_wrapper(center_y,center_x)
+  return{'id':i,'compass':degree,'color':color,'x':center_x,'y':center_y,'r':radius}
+}
+
+function compass_info(y,x){
+  // negative y means above the y-axis for d3
+  var deg = Math.atan(y/x)
+  deg = deg*180/Math.PI
+  if(x>0){
+    if(deg>=-45){
+      deg = deg - 45
+    } else {
+      deg = -135 - deg
+    }
+  } else {
+    deg = -1*deg
+    if(deg<=45){
+      deg = deg + 45
+    }else{
+      deg = 135 - deg
+    }
+  }
+  var rad = Math.sqrt(y**2 + x**2)
+  return [deg, rad]
+}
+
+
+/// VARIABLES COVERED
+
+var countries = ['ALB', 'DZA', 'AND', 'AGO', 'ATG', 'ARG', 'ARM', 'AUS', 'AUT',
+       'AZE', 'BHS', 'BHR', 'BGD', 'BRB', 'BLR', 'BEL', 'BLZ', 'BEN',
+       'BMU', 'BTN', 'BIH', 'BWA', 'BRA', 'BRN', 'BGR', 'BFA', 'BDI',
+       'KHM', 'CAN', 'CPV', 'CAF', 'TCD', 'CHL', 'CHN', 'COL', 'COM',
+       'COG', 'CRI', 'CIV', 'HRV', 'CUB', 'CYP', 'CZE', 'ZAR', 'DNK',
+       'DJI', 'DMA', 'DOM', 'ECU', 'EGY', 'SLV', 'GNQ', 'ERI', 'EST',
+       'ETH', 'FSM', 'FJI', 'FIN', 'FRA', 'GAB', 'GMB', 'GEO', 'DEU',
+       'GHA', 'GRC', 'GRL', 'GRD', 'GTM', 'GIN', 'GNB', 'GUY', 'HTI',
+       'HND', 'HKG', 'HUN', 'ISL', 'IND', 'IDN', 'IRQ', 'IRL', 'IRN',
+       'ISR', 'ITA', 'JAM', 'JPN', 'JOR', 'KAZ', 'KEN', 'KIR', 'KWT',
+       'KGZ', 'LAO', 'LVA', 'LBN', 'LBR', 'LBY', 'LTU', 'LUX', 'MAC',
+       'MKD', 'MDG', 'MWI', 'MYS', 'MDV', 'MLI', 'MLT', 'MHL', 'MRT',
+       'MUS', 'MEX', 'MNG', 'MNE', 'MAR', 'MOZ', 'MMR', 'NAM', 'NPL',
+       'NLD', 'NZL', 'NIC', 'NER', 'NGA', 'NOR', 'OMN', 'PAK', 'PLW',
+       'PAN', 'PNG', 'PRY', 'PER', 'PHL', 'BOL', 'POL', 'PRT', 'QAT',
+       'CMR', 'KOR', 'SDN', 'ROM', 'RUS', 'RWA', 'STP', 'SAU', 'SEN',
+       'SRB', 'SYC', 'SLE', 'SGP', 'SVK', 'SVN', 'SLB', 'ZAF', 'ESP',
+       'LKA', 'KNA', 'VCT', 'SUR', 'SWZ', 'SWE', 'CHE', 'TJK', 'THA',
+       'TGO', 'TON', 'TTO', 'TUN', 'TUR', 'TKM', 'UGA', 'UKR', 'ARE',
+       'GBR', 'TZA', 'USA', 'URY', 'UZB', 'VUT', 'VEN', 'VNM', 'YEM',
+       'ZMB', 'ZWE']
+
+var co2_prod_raw = "Production CO2 Emissions Absolute Value";
+var co2_cons_raw = "Consumption CO2 Emissions Absolute Value";
+var gdp_raw = "GDP Absolute Value";
+
+var co2_prod_pct_change = "Production CO2 Emissions Percent Change";
+var co2_cons_pct_change = "Consumption CO2 Emissions Percent Change";
+var gdp_pct_change = "GDP Percent Change";
+
+var co2_prod_abs_change = "Production CO2 Emissions Absolute Change";
+var co2_cons_abs_change = "Consumption CO2 Emissions Absolute Change";
+var gdp_abs_change = "GDP Absolute Change";
+
+var variable_tree = {
+  "Absolute Value":{
+    "Production":co2_prod_raw,
+    "Consumption":co2_cons_raw,
+    "GDP":gdp_raw
+  },
+  "Percent Change":{
+    "Production":co2_prod_pct_change,
+    "Consumption":co2_cons_pct_change,
+    "GDP":gdp_pct_change
+  },
+  "Absolute Change":{
+    "Production":co2_prod_abs_change,
+    "Consumption":co2_cons_abs_change,
+    "GDP":gdp_abs_change
+  }
+}
+
+/// FLOW AND STATE CONTROL
+
+var selected_country = "WLD";
+var clicked_country = null;
+var active_x_metric = co2_prod_pct_change
+var active_y_metric = gdp_pct_change
+var radius_metric = co2_prod_raw
+
+var playing = true;
+var next_year_in_progress = false;
+var currentTimeout;
+var year = 2000;
+var color_by_z = false;
+var mean = {}
+var sd = {}
+
+/// FORMATTING AND METRIC INFO
+var margin = { top: 50, right: 20, bottom: 75, left: 60 };
+var cc_margin = { top: 25, right: 25, bottom: 60, left: 60 };
+
+var sclfctr = 0
+var scatter_width = 530*(1+sclfctr) - margin.left - margin.right;
+var scatter_height = 560*(1+sclfctr) - margin.top - margin.bottom;
+
+var map_width = 620*(1-sclfctr);
+var map_height = 560*(1-sclfctr);
+
+var cc_width = 530 - cc_margin.left - cc_margin.right;
+var cc_height = 530 - cc_margin.top - cc_margin.bottom;
+
+var cl_width  = cc_width
+var cl_height =  cc_height/4
+
+var cr_width = cc_width
+var cr_height =  cc_height*3/4
+
+var pct_scale = d3.scaleLinear()
+  .domain([-10,10])
+  .range([-1,1])
+  .clamp(true)
+var cc_xscale_pct = d3.scaleLinear()
+  .domain([-1,1])
+  .range([0,cc_width])
+  .clamp(true);
+var cc_yscale_pct = d3.scaleLinear()
+  .domain([-1,1])
+  .range([cc_height,0])
+  .clamp(true);
+
+var z_scale = d3.scaleLinear()
+  .domain([-10,10])
+  .range([-3,3])
+  .clamp(true)
+var cc_xscale_z = d3.scaleLinear()
+  .domain([-3,3])
+  .range([0,cc_width])
+  .clamp(true);
+var cc_yscale_z = d3.scaleLinear()
+  .domain([-3,3])
+  .range([cc_height,0])
+  .clamp(true);
+
+
+var color_map_neg_x = d3.scaleLinear()
+  .domain([-135,-45,45,135])
+  .range(["white","green","white","red"]);
+var color_map_pos_x = d3.scaleLinear()
+  .domain([-135,-45,45,135])
+  .range(["white","red","white","green"]);
+var compass_map_neg_x = d3.scaleLinear()
+  .domain([-135,-45,45,135])
+  .range([0,90,0,-90]);
+var compass_map_pos_x = d3.scaleLinear()
+  .domain([-135,-45,45,135])
+  .range([0,-90,0,90]);
+
+var radius = d3.scaleSqrt()
+  .domain([0, 3000])
+  .range([2.5,20]);
+var cc_radius = d3.scaleLinear()
+  .domain([0, Math.sqrt(200)])
+  .range([6,cc_width/40])
+
+var cl_xscale = d3.scaleLinear()
+  .domain([-90,90])
+  .range([20,cc_width-20])
+  .clamp(true)
+var cr_yscale = d3.scaleOrdinal()
+  .domain([0,1,2,3,4,5,6,7,8,9,10])
+  .range([0,cc_height*3/4])
+
+// Reference: https://github.com/d3/d3-format
+var percent_format = d3.format(".0%");
+var value_format = d3.format(",.2r");
+function format_si(x) {
+  var s = d3.format(".2s")(x);
+  switch (s[s.length - 1]) {
+    case "G": return s.slice(0, -1) + "B";
+  }
+  return s;
+}
+
+var metric_info = {
+  "Production CO2 Emissions Absolute Value": {
+    "name": "Production CO2 Emissions",
+    "units": "Mt C",
+    "scale": d3.scaleLinear().range([0,scatter_width]).clamp(true),
+    "format": format_si,
+    "extent": [0,2000],
+    "longextent":[-200,1000]
+  },
+  "Production CO2 Emissions Percent Change": {
+    "name": "Production CO2 Emissions Change",
+    "units": "Mt C",
+    "scale": d3.scaleLinear().range([0,scatter_width]).clamp(true),
+    "format": percent_format,
+    "extent": [-0.4,.4],
+    "longextent": [-0.5,3]
+  },
+  "Production CO2 Emissions Absolute Change": {
+    "name": "Production CO2 Emissions Change",
+    "units": "Mt C",
+    "scale": d3.scaleLinear().range([0,scatter_width]).clamp(true),
+    "format": value_format,
+    "extent": [-.3,.6],
+    "longextent": [-2,6]
+  },
+
+  "Consumption CO2 Emissions Absolute Value": {
+    "name": "Consumption CO2 Emissions",
+    "units": "Mt C",
+    "scale": d3.scaleLinear().range([0,scatter_width]).clamp(true),
+    "format": format_si,
+    "extent": [0,2500],
+    "longextent":[-200,1000]
+  },
+  "Consumption CO2 Emissions Percent Change": {
+    "name": "Consumption CO2 Emissions Change",
+    "units": "Mt C",
+    "scale": d3.scaleLinear().range([0,scatter_width]).clamp(true),
+    "format": percent_format,
+    "extent": [-.4,.4],
+    "longextent": [-0.5,3]
+  },
+  "Consumption CO2 Emissions Absolute Change": {
+    "name": "Consumption CO2 Emissions Change",
+    "units": "Mt C",
+    "scale": d3.scaleLinear().range([0,scatter_width]).clamp(true),
+    "format": value_format,
+    "extent": [-2,4],
+    "longextent": [-2,6]
+  },
+
+  "GDP Absolute Value": {
+    "name": "Gross Domestic Product",
+    "units": "constant 2010 US$",
+    "scale": d3.scaleLinear().range([scatter_height,0]).clamp(true),
+    "format": format_si,
+    "extent": [-1e12,9e12],
+    "longextent":[-1e11,1e12]
+  },
+  "GDP Percent Change": {
+    "name": "Gross Domestic Product Change",
+    "units": "constant 2010 US$",
+    "scale": d3.scaleLinear().range([scatter_height,0]).clamp(true),
+    "format": percent_format,
+    "extent": [-0.4,.4],
+    "longextent": [-.3,4]
+  },
+  "GDP Absolute Change": {
+    "name": "Gross Domestic Product Change",
+    "units": "constant 2010 US$",
+    "scale": d3.scaleLinear().range([scatter_height,0]).clamp(true),
+    "format": format_si,
+    "extent": [-3e10,6e11],
+    "longextent":[-1e11,1e12]
+  }
+}
+
+/// CONTAINERS
+
+var scatter_svg = d3.select("#scatter_and_map")
+  .append("svg")
+    .attr("width", scatter_width + margin.left + margin.right)
+    .attr("height", scatter_height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// text label for the x axis
+scatter_svg.append("text")
+      .attr("transform","translate(" + (scatter_width/2) + " ," + (scatter_height + margin.top) + ")")
+      .attr("class","active_x_metric-axis_label")
+      .style("text-anchor", "middle");
+
+// text label for the y axis
+scatter_svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - margin.left)
+    .attr("x",0 - (scatter_height / 2))
+    .attr("dy", "1em")
+    .attr("class","active_y_metric-axis_label")
+    .style("text-anchor", "middle");
+
+var map_container = d3.select("#scatter_and_map")
+  .append("div")
+    .style("width", map_width + "px")
+    .style("height", map_height + "px")
+    .style("position", "relative")
+    .style("display", "inline-block");
+
+var map_svg = map_container
+  .append("svg")
+    .attr("width", map_width)
+    .attr("height", map_height);
+
+var color_canvas = d3.select('#color_canvas')
+  .append("svg")
+    .attr("width", cc_width + cc_margin.left + cc_margin.right)
+    .attr("height", cc_height + cc_margin.top + cc_margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + ")");
+
+color_canvas.append("g")
+  .attr("transform", "translate(0," + cc_height + ")")
+  .attr("class", "x axis");
+color_canvas.append("text")
+  .attr("transform","translate(" + (cc_width/2) + " ," + (cc_height + cc_margin.top + 20) + ")")
+  .attr("class","cc_active_x_metric-axis_label")
+  .style("text-anchor", "middle");
+
+color_canvas.append("g")
+  .attr("transform", "translate(0,0)")
+  .attr("class", "y axis");
+color_canvas.append("text")
+  .attr("transform", "rotate(-90)")
+  .attr("y", 0 - cc_margin.left)
+  .attr("x",0 - (cc_height / 2))
+  .attr("dy", "1em")
+  .attr("class","cc_active_y_metric-axis_label")
+  .style("text-anchor", "middle");
+
+var cc_points = [...Array(400).keys()].map(i => point_info(i))
+var cc_group = color_canvas.selectAll("g.cc_bubble")
+  .data(cc_points)
+  .enter().append("g")
+  .attr("class", "cc_bubble")
+  .style('opacity',1)
+
+cc_group.append('circle')
+    .style('fill', function(d){
+      return d.color
+    })
+    .style('stroke-width', '.1px')
+
+cc_group.append("text")
+    .attr("y", -20)
+    .attr("text-anchor", "middle")
+    .style("font-weight", "bold")
+    .text(function(d) {
+      return "Compass degree: " + value_format(d.compass)
+    })
+    .style("display", "none");
+
+cc_group.on('mouseover', function(d){
+  // hide all others
+    color_canvas.selectAll(".cc_bubble")
+      .filter(function(p) {
+        return p.id != d.id;
+      })
+      .transition()
+      .style('opacity', .1)
+
+  // show selected
+    var cc_bubble = color_canvas.selectAll(".cc_bubble")
+      .filter(function(p) {
+        return p.id == d.id;
+      })
+    cc_bubble.select("circle")
+      .transition()
+      .style("stroke-width", "1px")
+      .style('opacity', 1)
+    cc_bubble.select("text")
+      .transition()
+      .style("display", null);
+  })
+  .on('mouseout', function(){
+    var all_bubbles = color_canvas.selectAll(".cc_bubble")
+      .transition()
+      .style('opacity', 1)
+    all_bubbles.selectAll('circle')
+        .style("stroke-width", ".1px");
+    all_bubbles.selectAll('text')
+        .style("display", "none");
+  })
+
+update_cc_axes()
+
+color_canvas
+  .append("line")
+  .attr("class", "cc-dark-line")
+  .style("stroke", "#777")
+  .style("stroke-width", 1)
+  .attr("y1", 0)
+  .attr("y2", cc_height)
+  .attr("x1", cc_width/2)
+  .attr("x2", cc_width/2)
+color_canvas
+  .append("line")
+  .attr("class", "cc-dark-line")
+  .style("stroke", "#777")
+  .style("stroke-width", 1)
+  .attr("x1", 0)
+  .attr("x2", cc_width)
+  .attr("y1", cc_height/2)
+  .attr("y2", cc_height/2)
+
+// Add in linear axis showing country ranking
+// List countries in order below
+// Future work - use this metric to attempt correlations with other WBG data
+
+// data comes from: color_wrapper(datum[active_y_metric][year], datum[active_x_metric][year])
+d3.select('#explainer_section')
+  .style("position", "relative")
+  .style("display", "inline-block");
+
+// Takes up 1/4 of the cc_height
+var explanation = d3.select('#explanation')
+  .append("svg")
+    .attr("width", cc_width + cc_margin.left + cc_margin.right)
+    .attr("height", cc_height + cc_margin.top + cc_margin.bottom)
+    .style('border', '1px solid #d0d0d0')
+
+var color_line = explanation.append("g")
+  .attr("width", cl_width)
+  .attr("height",cl_height)
+  .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + ")")
+  .style('border', '1px solid #d0d0d0')
+
+color_line.append('rect')
+  .style('border', '1px solid #d0d0d0')
+  .style('fill', 'blue')
+
+color_line.append("g")
+  .attr("transform", "translate(0," + cl_height/2 + ")")
+  .attr("class", "color_line_x axis");
+
+color_line.selectAll(".color_line_x.axis text")
+  .attr("y", 8);
+
+var cl_xAxis = d3.axisBottom()
+  .tickValues([...Array(13).keys()].map(i=>i*15).map(i=>i-90))
+  .tickFormat(value_format)
+  .scale(cl_xscale);
+color_line.select(".color_line_x.axis")
+  .transition()
+  .call(cl_xAxis);
+color_line.selectAll(".color_line_x.axis text")
+  .transition()
+  .attr("y", 8);
+
+
+// Takes up 3/4 of the cc_height
+var country_rankings = explanation.append("g")
+    .attr("width", cr_width)
+    .attr("height", cr_height)
+    .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + cl_height + ")")
+    .style('border', '1px solid #d0d0d0')
+
+country_rankings.append("g")
+  .attr("transform", "translate(0,0)")
+  .attr("class", "cntry_ranking_y axis");
+
+country_rankings.selectAll(".cntry_ranking_y.axis text")
+  .attr("x", -8);
+
+var cr_yAxis = d3.axisLeft()
+  .tickValues([1,2,3,4,5,6,7,8,9,10])
+  .tickFormat(value_format)
+  .scale(cr_yscale);
+color_line.select(".cntry_ranking_y.axis")
+  .transition()
+  .call(cr_yAxis);
+
+
+
+/// CHECKBOXES
+
+d3.select(".mouseover_checkbox")
+.on("change", function () {
+    if(this.checked){
+      clicked_country = selected_country;
+    } else {
+      clicked_country = null;
+    }
+});
+
+d3.select(".autoplay_checkbox")
+.on("change", function () {
+    if(this.checked){
+      playing = true;
+      if(currentTimeout){
+        clearTimeout(currentTimeout)
+        nextYear();
+      }
+      return;
+    } else {
+      playing = false;
+      if(currentTimeout){
+        clearTimeout(currentTimeout)
+      }
+      return;
+    }
+});
+
+/// DROPDOWNS
+
+d3.select("#value_type_select")
+.on("change", function () {
+  value_type = this.value
+  emissions_type = d3.select("#emissions_type_select").property("value")
+  active_x_metric = variable_tree[value_type][emissions_type]
+  active_y_metric = variable_tree[value_type]['GDP']
+  if(value_type == 'Percent Change'){
+    color_by_z = false
+  } else {
+    color_by_z = true
+  }
+  refresh_graphic();
+  update_cc_axes();
+  return;
+});
+
+d3.select("#emissions_type_select")
+.on("change", function () {
+  value_type = d3.select("#value_type_select").property("value")
+  emissions_type = this.value
+  active_x_metric = variable_tree[value_type][emissions_type]
+  active_y_metric = variable_tree[value_type]['GDP']
+  refresh_graphic();
+  update_cc_axes();
+  return;
+});
+
+///
+  d3.select("#year-slider")
+    .on("input", function() {
+      year = this.value;
+      if (year == 2016) {
+        year = "Summary Range"
+        if(currentTimeout){
+           next_year_in_progress = false;
+           clearTimeout(currentTimeout);
+        }
+        refresh_graphic();
+        return;
+      }
+      if(playing){
+        if(currentTimeout){
+           next_year_in_progress = false;
+           clearTimeout(currentTimeout);
+        }
+        refresh_graphic();
+        currentTimeout = setTimeout(nextYear, 1100);
+        return;
+      } else {
+        if(currentTimeout){
+           next_year_in_progress = false;
+           clearTimeout(currentTimeout);
+        }
+        refresh_graphic();
+      }
+});
+
+
+
+/// DRAWING THE MAP
+
+var projection = d3.geoTimes()
+    .scale((map_width - 4) / (1.5 * Math.PI))
+    .translate([map_width / 2, map_height / 2])
+    .precision(0.1);
+
+var path = d3.geoPath()
+    .projection(projection);
+
+var graticule = d3.geoGraticule();
+
+map_svg.append("defs").append("path")
+    .datum(graticule.outline())
+    .attr("id", "sphere")
+    .attr("d", path);
+
+map_svg.append("use")
+    .attr("class", "stroke")
+    .attr("xlink:href", "#sphere");
+
+map_svg.append("use")
+    .attr("class", "fill")
+    .attr("xlink:href", "#sphere");
+
+map_svg.append("path")
+    .datum(graticule)
+    .attr("class", "graticule")
+    .attr("d", path);
+
+/// LOAD DATA
+var lookup = {};
+
+d3.queue()
+.defer(d3.csv, '../final-data/All\ Data\ Together\ Concise.csv')
+  .await(function(error, all_data) {
+    console.log(all_data)
+    all_data.forEach(function(d) {
+      lookup[d["ISO"]] = lookup[d["ISO"]] || {};
+      lookup[d["ISO"]][d["Indicator"]] = d;
+      lookup[d["ISO"]]["name"] = lookup[d["ISO"]]["name"] || d["Country Name"]
+    });
+  console.log(lookup)
+  console.log(all_data)
+
+  // Set scales for each metric
+  Object.keys(metric_info).forEach(function(metric) {
+    mean[metric] = {}
+    sd[metric] = {}
+    // Calculate global mean and sd of each metric in each year
+    for (i = 0; i < 16; i++){
+      mean[metric][2000+i] = d3.mean(Object.keys(lookup), function(d) {
+        if(metric in lookup[d] && (2000+i) in lookup[d][metric]){
+          return lookup[d][metric][2000+i]
+        } else {return null}
+      })
+      sd[metric][2000+i] = d3.deviation(Object.keys(lookup), function(d) {
+        if(metric in lookup[d] && (2000+i) in lookup[d][metric]){
+          return lookup[d][metric][2000+i]
+        } else {return null}
+      })
+    }
+    mean[metric]['Summary Range'] = d3.mean(Object.keys(lookup), function(d) {
+      if(metric in lookup[d]){
+        return lookup[d][metric]['Summary Range']
+      } else {return null}
+    })
+    sd[metric]['Summary Range'] = d3.deviation(Object.keys(lookup), function(d) {
+      if(metric in lookup[d]){
+        return lookup[d][metric]['Summary Range']
+      } else {return null}
+    })
+
+    console.log(mean)
+    console.log(sd)
+    /* Calculating extents on the fly... this has been done through experimentation
+    var data = all_data.filter(function(d) { return d["Indicator"]==metric && d["ISO"] !== "WLD";})
+    var year_cols = [...Array(1+2015-2000).keys()].map(v => 2000+v).map(u => String(u))
+    var joined_data = []
+    var year
+    for (i = 0; i < year_cols.length; i++){
+      year = year_cols[i]
+      joined_data = joined_data.concat(d3.extent(data, function(d){return +d[year]}))
+    }
+    var calculated_extent = d3.extent(joined_data)
+    var calculated_long_extent = d3.extent(data, function(d) { return +d["Summary Range"]; })
+    var extent = metric_info[metric].extent = metric_info[metric].extent || calculated_extent;
+    metric_info[metric].longextent = metric_info[metric].longextent || calculated_long_extent;
+    */
+
+  });
+
+    // DRAW SCATTER
+    scatter_svg.append("g")
+      .attr("transform", "translate(0," + scatter_height + ")")
+      .attr("class", "x axis");
+
+    scatter_svg.selectAll(".x.axis text")
+      .attr("y", 8);
+
+    scatter_svg.append("g")
+      .attr("transform", "translate(0,0)")
+      .attr("class", "y axis");
+
+    scatter_svg
+      .append("line")
+      .attr("class", "dark-line-1")
+      .style("stroke", "#777")
+      .style("stroke-width", 1)
+      .attr("y1", 0)
+      .attr("y2", scatter_height)
+      .attr("x1", scatter_width/2)
+      .attr("x2", scatter_width/2)
+    scatter_svg
+      .append("line")
+      .attr("class", "dark-line-2")
+      .style("stroke", "#777")
+      .style("stroke-width", 1)
+      .attr("x1", 0)
+      .attr("x2", scatter_width)
+      .attr("y1", scatter_height/2)
+      .attr("y2", scatter_height/2)
+
+    // All axes drawing occurs here
+    // Could use a logic check to draw axes if they don't yet exist, this works fine though
+    update_x_axis();
+    update_y_axis();
+
+    var group = scatter_svg.selectAll("g.bubble")
+      .data(countries)
+      .enter().append("g")
+      .attr("class", "bubble")
+
+    group
+      .append("text")
+      .attr("y", -20)
+      .attr("text-anchor", "middle")
+      .style("font-weight", "bold")
+      .text(function(d) {
+        return d in lookup ? lookup[d].name : "";
+      })
+      .style("display", "none");
+
+    group
+      .append("circle")
+      .on("click", function(d) {
+        clicked_country = d
+        d3.select(".mouseover_checkbox")
+        .property("checked", true)
+        update_to_selected_region(clicked_country);
+      })
+      .on("mouseover", function(d) {
+        var country = d;
+        if (!clicked_country) {
+          if (countries.indexOf(country) == -1) { return "#eaeaea"; }
+          if (!(country in lookup)) { return "#eaeaea"; }
+          update_to_selected_region(country)
+        }
+      })
+      .on("mouseout", function() {
+        if (!clicked_country) {
+          reset_to_global()
+        }
+      })
+    // End scatterplot setup
+
+    // DRAW COLOR LINE
+
+    var cl_group = color_line.selectAll("g.bubble")
+      .data(countries)
+      .enter().append("g")
+      .attr("class", "bubble")
+
+    cl_group
+      .append("text")
+      .attr("y", -20)
+      .attr("text-anchor", "middle")
+      .style("font-weight", "bold")
+      .text(function(d) {
+        return d in lookup ? lookup[d].name : "";
+      })
+      .style("display", "none");
+
+    cl_group
+      .append("circle")
+      .on("click", function(d) {
+        clicked_country = d
+        d3.select(".mouseover_checkbox")
+        .property("checked", true)
+        update_to_selected_region(clicked_country);
+      })
+      .on("mouseover", function(d) {
+        var country = d;
+        if (!clicked_country) {
+          if (countries.indexOf(country) == -1) { return "#eaeaea"; }
+          if (!(country in lookup)) { return "#eaeaea"; }
+          update_to_selected_region(country)
+        }
+      })
+      .on("mouseout", function() {
+        if (!clicked_country) {
+          reset_to_global()
+        }
+      })
+
+
+    // DRAW MAP
+
+    // With TopoJSON
+/*
+    isoLookup = {}
+    d3.json("../data/wri-bounds-topo.json", function(error, world) {
+      if (error) throw error;
+
+      map_svg.selectAll("path.country")
+          .data(topojson.feature(world, world.objects.countries).features)
+        .enter().append("path")
+          .attr("class", "country")
+          .attr("d", path);
+
+      map_svg.insert("path", ".graticule")
+          .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+          .attr("class", "boundary")
+          .attr("d", path);
+
+      d3.csv("../data/iso-3166.csv", function(error, isoCodes) {
+        isoCodes.forEach(function(d) {
+          isoLookup[String(+d["country-code"])] = d;
+        });
+
+        refresh_graphic();
+        setTimeout(nextYear, 1100);
+         console.log("set year and cued nextYear")
+
+        map_svg.selectAll("path.country")
+          .style("fill", function(d) {
+            var country = isoLookup[d.id]['alpha-3']
+            if (countries.indexOf(country) == -1) { return "#eaeaea"; }
+            if (!(country in lookup)) { return "#eaeaea"; }
+            var datum = lookup[country];
+            if (datum[active_y_metric][year] == "") { return "#eaeaea" };
+            if (datum[active_x_metric][year] == "") { return "#eaeaea" };
+            return color_wrapper(datum[active_y_metric][year], datum[active_x_metric][year]) || "#eaeaea";
+          })
+          .on("click", function(d){
+            clicked_country = isoLookup[d.id]['alpha-3'];
+            d3.selectAll(".mouseover_checkbox")
+             .property("checked", true)
+            reset_to_global();
+            update_to_selected_region(clicked_country)
+          })
+          .on("mouseover", function(d) {
+            var country = isoLookup[d.id]['alpha-3']
+            if (clicked_country) {
+              return clicked_country;
+            } else {
+              if (countries.indexOf(country) == -1) { return "#eaeaea"; }
+              if (!(country in lookup)) { return "#eaeaea"; }
+              update_to_selected_region(country)
+            }
+          })
+          .on("mouseout", function() {
+            if (clicked_country) {
+              return clicked_country;
+            } else {
+              reset_to_global();
+            }
+          });
+
+      });
+    });
+*/
+    //   Without using TopoJSON
+
+    d3.json("../data/all_primary_countries.json", function(error, world){
+      if (error) throw error;
+
+      map_svg.selectAll("path.country")
+        .data(world.features)
+        .enter().append("path")
+          .attr("class", "country")
+          .attr("d", path);
+
+        refresh_graphic();
+        setTimeout(nextYear, 1100);
+         console.log("set year and cued nextYear")
+
+        map_svg.selectAll("path.country")
+        // This bit of duplicated code means the map doesn't load black at first
+          .style("fill", function(d) {
+            var country = d.properties.iso_a3
+            if (countries.indexOf(country) == -1) { return "#eaeaea"; }
+            if (!(country in lookup)) { return "#eaeaea"; }
+            var datum = lookup[country];
+            if (datum[active_y_metric][year] == "") { return "#eaeaea" };
+            if (datum[active_x_metric][year] == "") { return "#eaeaea" };
+            return color_wrapper(datum[active_y_metric][year], datum[active_x_metric][year]) || "#eaeaea";
+          })
+          .on("click", function(d){
+            clicked_country = d.properties.iso_a3;
+            d3.selectAll(".mouseover_checkbox")
+             .property("checked", true)
+            reset_to_global();
+            update_to_selected_region(clicked_country)
+          })
+          .on("mouseover", function(d) {
+            var country = d.properties.iso_a3
+            if (!clicked_country) {
+              if (countries.indexOf(country) == -1) { return "#eaeaea"; }
+              if (!(country in lookup)) { return "#eaeaea"; }
+              update_to_selected_region(country)
+            }
+          })
+          .on("mouseout", function() {
+            if (!clicked_country) {
+              reset_to_global();
+            }
+          });
+    // End map setup
+    });
+    transition_scatter_and_map()
+// End data load, scatter and map setup
+});
+
+</script>
