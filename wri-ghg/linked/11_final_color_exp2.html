@@ -731,11 +731,12 @@ var sd = {}
 var margin = { top: 50, right: 20, bottom: 75, left: 60 };
 var cc_margin = { top: 25, right: 25, bottom: 60, left: 60 };
 
-var scatter_width = 530 - margin.left - margin.right;
-var scatter_height = 560 - margin.top - margin.bottom;
+var sclfctr = .1
+var scatter_width = 530*(1+sclfctr) - margin.left - margin.right;
+var scatter_height = 560*(1+sclfctr) - margin.top - margin.bottom;
 
-var map_width = 620;
-var map_height = 560;
+var map_width = 620*(1-sclfctr);
+var map_height = 560*(1-sclfctr);
 
 var cc_width = 530 - cc_margin.left - cc_margin.right;
 var cc_height = 530 - cc_margin.top - cc_margin.bottom;
@@ -1041,7 +1042,6 @@ var explanation = d3.select('#explanation')
     .attr("width", cc_width + cc_margin.left + cc_margin.right)
     .attr("height", cc_height + cc_margin.top + cc_margin.bottom)
     .style('border', '1px solid #d0d0d0')
-
 
 var color_line = explanation.append("g")
   .attr("width", cl_width)
