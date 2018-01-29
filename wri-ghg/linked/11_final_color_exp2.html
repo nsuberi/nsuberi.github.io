@@ -435,11 +435,12 @@ function transition_scatter_and_map() {
     })
 
     var cr_group = country_rankings.selectAll("g.top10cntry")
-        .data(top10withIndices)
+        .data(top10withIndices, function(i){return i.code})
 
-    cr_group.exit().remove()
     cr_group.enter().append("g")
       .attr("class", "top10cntry")
+      .merge(cr_group)
+    cr_group.exit().remove()
 
     cr_group
       .append("text")
