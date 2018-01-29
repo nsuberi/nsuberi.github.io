@@ -798,7 +798,7 @@ var cl_xscale = d3.scaleLinear()
   .domain([-90,90])
   .range([20,cc_width-20])
   .clamp(true)
-var cr_yscale = d3.scaleOrdinal()
+var cr_yscale = d3.scaleBand()
   .domain([0,1,2,3,4,5,6,7,8,9,10])
   .range([0,cc_height*3/4])
 
@@ -930,6 +930,9 @@ var color_canvas = d3.select('#color_canvas')
   .append("svg")
     .attr("width", cc_width + cc_margin.left + cc_margin.right)
     .attr("height", cc_height + cc_margin.top + cc_margin.bottom)
+    .style('border', '1px solid #d0d0d0')
+    .style('display', 'inline-block')
+    .style('position', 'relative')
   .append("g")
     .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + ")");
 
@@ -1033,8 +1036,9 @@ color_canvas
 
 // data comes from: color_wrapper(datum[active_y_metric][year], datum[active_x_metric][year])
 d3.select('#explainer_section')
+  .style('border', '1px solid #d0d0d0')
+  .style("display", "inline-block")
   .style("position", "relative")
-  .style("display", "inline-block");
 
 // Takes up 1/4 of the cc_height
 var explanation = d3.select('#explanation')
@@ -1042,16 +1046,29 @@ var explanation = d3.select('#explanation')
     .attr("width", cc_width + cc_margin.left + cc_margin.right)
     .attr("height", cc_height + cc_margin.top + cc_margin.bottom)
     .style('border', '1px solid #d0d0d0')
+    .style('display', 'inline-block')
+    .style('position', 'relative')
+  .append("g")
+    .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + ")")
 
 var color_line = explanation.append("g")
-  .attr("width", cl_width)
-  .attr("height",cl_height)
-  .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + ")")
-  .style('border', '1px solid #d0d0d0')
+    .attr("width", cl_width)
+    .attr("height",cl_height)
+    .attr("class", "color_line")
+    .attr("transform", "translate(0,0)")
+    .style('border', '1px solid #d0d0d0')
+    .style('display', 'inline-block')
+    .style('position', 'relative')
 
-color_line.append('rect')
-  .style('border', '1px solid #d0d0d0')
-  .style('fill', 'blue')
+// http://bl.ocks.org/AndrewStaroscik/5222370
+color_line.append("rect")
+       			.attr("x", 0)
+       			.attr("y", 0)
+       			.attr("height", cl_height)
+       			.attr("width", cl_width)
+       			.style("stroke", 'black')
+       			.style("fill", "none")
+       			.style("stroke-width", 1);
 
 color_line.append("g")
   .attr("transform", "translate(0," + cl_height/2 + ")")
@@ -1076,8 +1093,21 @@ color_line.selectAll(".color_line_x.axis text")
 var country_rankings = explanation.append("g")
     .attr("width", cr_width)
     .attr("height", cr_height)
-    .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + cl_height + ")")
+    .attr("transform", "translate(0," + cl_height + ")")
+    .attr("class", "country_rankings")
     .style('border', '1px solid #d0d0d0')
+    .style('display', 'inline-block')
+    .style('position', 'relative')
+
+// http://bl.ocks.org/AndrewStaroscik/5222370
+country_rankings.append("rect")
+       			.attr("x", 0)
+       			.attr("y", 0)
+       			.attr("height", cr_height)
+       			.attr("width", cr_width)
+       			.style("stroke", 'black')
+       			.style("fill", "none")
+       			.style("stroke-width", 1);
 
 country_rankings.append("g")
   .attr("transform", "translate(0,0)")
@@ -1090,7 +1120,7 @@ var cr_yAxis = d3.axisLeft()
   .tickValues([1,2,3,4,5,6,7,8,9,10])
   .tickFormat(value_format)
   .scale(cr_yscale);
-color_line.select(".cntry_ranking_y.axis")
+country_rankings.select(".cntry_ranking_y.axis")
   .transition()
   .call(cr_yAxis);
 
