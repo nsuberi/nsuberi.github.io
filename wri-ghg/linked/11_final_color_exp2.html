@@ -681,6 +681,8 @@ function construct_search_obj(c) {
 }
 
 function onSelect(c){
+  clicked_country = c.code
+  d3.select(".mouseover_checkbox").property("checked", true)
   update_to_selected_region(c.code)
 }
 
