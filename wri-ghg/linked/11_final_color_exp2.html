@@ -326,6 +326,7 @@ function update_y_axis(metric) {
 };
 
 function transition_scatter_and_map() {
+
   // Color, size, and position scatter circles
   scatter_svg.selectAll("g.bubble")
     .transition()
@@ -387,7 +388,7 @@ function transition_scatter_and_map() {
       .attr("transform", function(d) {
         // Always stay at y=10
         var compass_degree = color_wrapper(lookup[d][active_y_metric][year], lookup[d][active_x_metric][year], compass_degree=true)
-        return "translate(" + cl_xscale(compass_degree) + "," + 27 + ")"
+        return "translate(" + cl_xscale(compass_degree[0]) + "," + 27 + ")"
       });
     color_line.selectAll("g.bubble circle")
       .transition()
@@ -412,6 +413,67 @@ function transition_scatter_and_map() {
       })
 
     // Country ranking
+    var top10 = country_values.sort(function(a,b){
+      return b.degree > a.degree
+    })
+    .slice(0,10)
+
+    console.log('displaying top 10')
+    console.log(top10)
+
+    var counter = 1
+    var top10withIndices = top10.map(function(c){
+      new_obj = {
+        code:c.code,
+        degree:c.degree,
+        rank:counter
+      }
+      counter += 1
+      return new_obj
+    })
+
+    var cr_group = country_rankings.selectAll("g.top10cntry")
+        .data(top10withIndices)
+
+    cr_group.exit().remove()
+    cr_group.enter().append("g")
+      .attr("class", "top10cntry")
+
+    cr_group
+      .append("text")
+      .transition(700)
+      .attr("transform",function(c){
+        return "translate(10,"+cr_yscale(c.rank)+")"
+      })
+      .attr("text-anchor", "left")
+      .style("font-weight", "bold")
+      .text(function(c) {
+        return c.code + ' compass degree: ' + value_format(c.degree)
+      })
+      .style("display", null);
+
+    /*cl_group
+      .append("circle")
+      .on("click", function(d) {
+        clicked_country = d
+        d3.select(".mouseover_checkbox")
+        .property("checked", true)
+        update_to_selected_region(clicked_country);
+      })
+      .on("mouseover", function(d) {
+        var country = d;
+        if (!clicked_country) {
+          if (countries.indexOf(country) == -1) { return "#eaeaea"; }
+          if (!(country in lookup)) { return "#eaeaea"; }
+          update_to_selected_region(country)
+        }
+      })
+      .on("mouseout", function() {
+        if (!clicked_country) {
+          reset_to_global()
+        }
+      })*/
+
 
 }
 
@@ -613,13 +675,13 @@ function color_wrapper(y,x,compass_degree=false){
 
   if(x>0){
     if(compass_degree){
-      return(compass_map_pos_x(val))
+      return([compass_map_pos_x(val),color_map_pos_x(val)])
     }else{
       return(color_map_pos_x(val))
     }
   }else{
     if(compass_degree){
-      return(compass_map_neg_x(val))
+      return([compass_map_neg_x(val),color_map_neg_x(val)])
     }else{
       return(color_map_neg_x(val))
     }
@@ -663,6 +725,15 @@ function compass_info(y,x){
   }
   var rad = Math.sqrt(y**2 + x**2)
   return [deg, rad]
+}
+
+function calculate_compass_info(cntry) {
+  var info = color_wrapper(lookup[cntry][active_y_metric][year],
+                                                lookup[cntry][active_x_metric][year],
+                                                compass_degree=true)
+  var compass_degree = info[0]
+  var compass_color = info[1]
+  return {code:cntry, degree:compass_degree, color:compass_color}
 }
 
 function start_search() {
