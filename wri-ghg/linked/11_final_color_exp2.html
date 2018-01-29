@@ -87,6 +87,9 @@ path.country {
 .checkbox {
   width: 20
 }
+.header_labels{
+  text-align: center
+}
 
 #color_canvas svg {
   /*background: conic-gradient(white,red, white, green, white);
@@ -146,7 +149,9 @@ path.country {
   </div>
 
   <div id='scatter_and_map'></div>
-  <div>Demonstrate how colors are given</div>
+  <p>In all the graphics you see here, countries are assigned a color based on a Compass Degree, calculated using each country's relative "Percent Change"/"Absolute Change"/"Amount" of GHG and GDP in a given year/year range/over the summary period 2000-2015.</p>
+  <p>"""Can update automatically as selection at top changes""".</p>
+  <p>For a full description of the math used, click -*~here!*- to read the technical note.</p>
   </br>
   <div id='explainer_section'></div>
 <!--    <div id='color_canvas'></div>
@@ -728,16 +733,17 @@ var mean = {}
 var sd = {}
 
 /// FORMATTING AND METRIC INFO
-var margin = { top: 50, right: 20, bottom: 75, left: 60 };
+var sctr_margin = { top: 50, right: 20, bottom: 75, left: 60 };
+var map_margin = { top: 20, right: 0, bottom: 0, left: 30 };
 var rcd_margin = { top: 20, right: 20, bottom: 60, left: 60 };
 var cc_margin = { top: 20, right: 20, bottom: 60, left: 70 };
 
 var sclfctr = 0
-var scatter_width = 530*(1+sclfctr) - margin.left - margin.right;
-var scatter_height = 560*(1+sclfctr) - margin.top - margin.bottom;
+var scatter_width = 530*(1+sclfctr) - sctr_margin.left - sctr_margin.right;
+var scatter_height = 560*(1+sclfctr) - sctr_margin.top - sctr_margin.bottom;
 
-var map_width = 620*(1-sclfctr);
-var map_height = 560*(1-sclfctr);
+var map_width = 620*(1-sclfctr) - map_margin.left - map_margin.right;
+var map_height = 560*(1-sclfctr) - map_margin.top - map_margin.bottom;
 
 var rcd_width = 590 - rcd_margin.left - rcd_margin.right;
 var rcd_height = 500 - rcd_margin.top - rcd_margin.bottom;
@@ -900,40 +906,37 @@ var metric_info = {
 
 var scatter_svg = d3.select("#scatter_and_map")
   .append("svg")
-    .attr("width", scatter_width + margin.left + margin.right)
-    .attr("height", scatter_height + margin.top + margin.bottom)
+    .attr("width", scatter_width + sctr_margin.left + sctr_margin.right)
+    .attr("height", scatter_height + sctr_margin.top + sctr_margin.bottom)
   .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("transform", "translate(" + sctr_margin.left + "," + sctr_margin.top + ")");
 
 // text label for the x axis
 scatter_svg.append("text")
-      .attr("transform","translate(" + (scatter_width/2) + " ," + (scatter_height + margin.top) + ")")
+      .attr("transform","translate(" + (scatter_width/2) + " ," + (scatter_height + sctr_margin.top) + ")")
       .attr("class","active_x_metric-axis_label")
       .style("text-anchor", "middle");
 
 // text label for the y axis
 scatter_svg.append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", 0 - margin.left)
+    .attr("y", 0 - sctr_margin.left)
     .attr("x",0 - (scatter_height / 2))
     .attr("dy", "1em")
     .attr("class","active_y_metric-axis_label")
     .style("text-anchor", "middle");
 
-var map_container = d3.select("#scatter_and_map")
-  .append("div")
-    .style("width", map_width + "px")
-    .style("height", map_height + "px")
-    .style("position", "relative")
-    .style("display", "inline-block");
+// TO DO: Implement a search w/ autocomplete: https://www.w3schools.com/howto/howto_js_autocomplete.asp
 
-var map_svg = map_container
+var map_svg = d3.select("#scatter_and_map")
   .append("svg")
-    .attr("width", map_width)
-    .attr("height", map_height);
+    .attr("width", map_width + map_margin.left + map_margin.right)
+    .attr("height", map_height + map_margin.top + map_margin.bottom)
+  .append("g")
+    .attr("transform", "translate("+map_margin.left+","+map_margin.top+")")
 
 var explanations = d3.select('#explainer_section')
-  .style('border', '1px solid #d0d0d0')
+//  .style('border', '1px solid #d0d0d0')
   .style("display", "inline-block")
   .style("position", "relative")
 
