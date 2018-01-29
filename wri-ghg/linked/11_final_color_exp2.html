@@ -937,13 +937,10 @@ var explanations = d3.select('#explainer_section')
   .style("display", "inline-block")
   .style("position", "relative")
 
-
 var color_canvas = explanations.append("svg")
     .attr("width", cc_width + cc_margin.left + cc_margin.right)
     .attr("height", cc_height + cc_margin.top + cc_margin.bottom)
-    .style('border', '1px solid #d0d0d0')
-    .style('display', 'inline-block')
-    .style('position', 'relative')
+//    .style('border', '1px solid #d0d0d0')
   .append("g")
     .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + ")");
 
@@ -1049,9 +1046,7 @@ color_canvas
 var ranking_by_compass_degree = explanations.append("svg")
     .attr("width", rcd_width + rcd_margin.left + rcd_margin.right)
     .attr("height", rcd_height + rcd_margin.top + rcd_margin.bottom)
-    .style('border', '1px solid #d0d0d0')
-    .style('display', 'inline-block')
-    .style('position', 'relative')
+//    .style('border', '1px solid #d0d0d0')
   .append("g")
     .attr("transform", "translate(" + rcd_margin.left + "," + rcd_margin.top + ")")
 
