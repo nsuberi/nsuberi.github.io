@@ -146,12 +146,12 @@ path.country {
   </div>
 
   <div id='scatter_and_map'></div>
+  <div>Demonstrate how colors are given</div>
+  </br>
+  <div id='explainer_section'></div>
+<!--    <div id='color_canvas'></div>
+    <div id='explanation'></div>  -->
 
-  <div id='explainer_section'>
-    Demonstrate how colors are given
-    <div id='color_canvas'></div>
-    <div id='explanation'></div>
-  </div>
 
 </body>
 
@@ -729,7 +729,8 @@ var sd = {}
 
 /// FORMATTING AND METRIC INFO
 var margin = { top: 50, right: 20, bottom: 75, left: 60 };
-var cc_margin = { top: 25, right: 25, bottom: 60, left: 60 };
+var rcd_margin = { top: 20, right: 20, bottom: 60, left: 60 };
+var cc_margin = { top: 20, right: 20, bottom: 60, left: 70 };
 
 var sclfctr = 0
 var scatter_width = 530*(1+sclfctr) - margin.left - margin.right;
@@ -738,14 +739,19 @@ var scatter_height = 560*(1+sclfctr) - margin.top - margin.bottom;
 var map_width = 620*(1-sclfctr);
 var map_height = 560*(1-sclfctr);
 
-var cc_width = 530 - cc_margin.left - cc_margin.right;
-var cc_height = 530 - cc_margin.top - cc_margin.bottom;
+var rcd_width = 590 - rcd_margin.left - rcd_margin.right;
+var rcd_height = 500 - rcd_margin.top - rcd_margin.bottom;
+
+var cc_width = 540 - cc_margin.left - cc_margin.right;
+var cc_height = 460 - cc_margin.top - cc_margin.right;
 
 var cl_width  = cc_width
 var cl_height =  cc_height/4
 
 var cr_width = cc_width
 var cr_height =  cc_height*3/4
+
+
 
 var pct_scale = d3.scaleLinear()
   .domain([-10,10])
@@ -926,8 +932,13 @@ var map_svg = map_container
     .attr("width", map_width)
     .attr("height", map_height);
 
-var color_canvas = d3.select('#color_canvas')
-  .append("svg")
+var explanations = d3.select('#explainer_section')
+  .style('border', '1px solid #d0d0d0')
+  .style("display", "inline-block")
+  .style("position", "relative")
+
+
+var color_canvas = explanations.append("svg")
     .attr("width", cc_width + cc_margin.left + cc_margin.right)
     .attr("height", cc_height + cc_margin.top + cc_margin.bottom)
     .style('border', '1px solid #d0d0d0')
@@ -949,8 +960,8 @@ color_canvas.append("g")
   .attr("class", "y axis");
 color_canvas.append("text")
   .attr("transform", "rotate(-90)")
-  .attr("y", 0 - cc_margin.left)
-  .attr("x",0 - (cc_height / 2))
+  .attr("y", 0 - 65)
+  .attr("x", 0 - (cc_height / 2))
   .attr("dy", "1em")
   .attr("class","cc_active_y_metric-axis_label")
   .style("text-anchor", "middle");
@@ -1034,24 +1045,17 @@ color_canvas
 // List countries in order below
 // Future work - use this metric to attempt correlations with other WBG data
 
-// data comes from: color_wrapper(datum[active_y_metric][year], datum[active_x_metric][year])
-d3.select('#explainer_section')
-  .style('border', '1px solid #d0d0d0')
-  .style("display", "inline-block")
-  .style("position", "relative")
-
 // Takes up 1/4 of the cc_height
-var explanation = d3.select('#explanation')
-  .append("svg")
-    .attr("width", cc_width + cc_margin.left + cc_margin.right)
-    .attr("height", cc_height + cc_margin.top + cc_margin.bottom)
+var ranking_by_compass_degree = explanations.append("svg")
+    .attr("width", rcd_width + rcd_margin.left + rcd_margin.right)
+    .attr("height", rcd_height + rcd_margin.top + rcd_margin.bottom)
     .style('border', '1px solid #d0d0d0')
     .style('display', 'inline-block')
     .style('position', 'relative')
   .append("g")
-    .attr("transform", "translate(" + cc_margin.left + "," + cc_margin.top + ")")
+    .attr("transform", "translate(" + rcd_margin.left + "," + rcd_margin.top + ")")
 
-var color_line = explanation.append("g")
+var color_line = ranking_by_compass_degree.append("g")
     .attr("width", cl_width)
     .attr("height",cl_height)
     .attr("class", "color_line")
@@ -1060,6 +1064,7 @@ var color_line = explanation.append("g")
     .style('display', 'inline-block')
     .style('position', 'relative')
 
+/*
 // http://bl.ocks.org/AndrewStaroscik/5222370
 color_line.append("rect")
 		.attr("x", 0)
@@ -1068,7 +1073,7 @@ color_line.append("rect")
 		.attr("width", cl_width)
 		.style("stroke", 'black')
 		.style("fill", "none")
-		.style("stroke-width", 1);
+		.style("stroke-width", 1); */
 
 color_line.append("g")
   .attr("transform", "translate(0," + cl_height/2 + ")")
@@ -1089,7 +1094,7 @@ color_line.selectAll(".color_line_x.axis text")
   .attr("y", 8);
 
 // Takes up 3/4 of the cc_height
-var country_rankings = explanation.append("g")
+var country_rankings = ranking_by_compass_degree.append("g")
     .attr("width", cr_width)
     .attr("height", cr_height)
     .attr("transform", "translate(0," + cl_height + ")")
