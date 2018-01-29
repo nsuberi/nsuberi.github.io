@@ -327,6 +327,8 @@ function update_y_axis(metric) {
 
 function transition_scatter_and_map() {
 
+  var country_values = countries.map(c => calculate_compass_info(c))
+
   // Color, size, and position scatter circles
   scatter_svg.selectAll("g.bubble")
     .transition()
