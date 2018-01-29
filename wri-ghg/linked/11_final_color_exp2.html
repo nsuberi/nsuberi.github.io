@@ -109,6 +109,7 @@ path.country {
       <div id='info'>
         <p> Use this tool to explore the relationship between economic growth (GDP) and carbon emissions around the world. </p>
       </div>
+      <div id="search_bar" style="width:100%; height:40px;"></div>
       <div id='slider_and_checkboxes'>
         Time Range &nbsp;
         <input type="range" min=2000 max=2016 step=1 value=2000 id="year-slider" />
@@ -164,9 +165,12 @@ path.country {
 <script src="https://unpkg.com/topojson-client@3"></script>
 <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
 
-<!--http://leaverou.github.io/conic-gradient/-->
+<!--http://leaverou.github.io/conic-gradient/
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js"></script>
-<script src="../css/conic-gradient.js"></script>
+<script src="../css/conic-gradient.js"></script> -->
+
+<script src="../css/autocomplete_styles.css" type="text/css"></script>
+<script src="../js/autocomplete.js"></script>
 
 <script>
 
@@ -661,6 +665,24 @@ function compass_info(y,x){
   return [deg, rad]
 }
 
+function start_search() {
+    var search_bar = autocomplete(document.getElementById('search_bar'))
+            .keys(country_objects)
+            .dataField("code")
+            .placeHolder("Search Countries by iso3 code - Start typing here")
+            .width(500)
+            .height(80)
+            .onSelected(onSelect)
+            .render();
+}
+
+function construct_search_obj(c) {
+  return {code:c, name:''}
+}
+
+function onSelect(c){
+  update_to_selected_region(c.code)
+}
 
 /// VARIABLES COVERED
 
@@ -685,6 +707,10 @@ var countries = ['ALB', 'DZA', 'AND', 'AGO', 'ATG', 'ARG', 'ARM', 'AUS', 'AUT',
        'TGO', 'TON', 'TTO', 'TUN', 'TUR', 'TKM', 'UGA', 'UKR', 'ARE',
        'GBR', 'TZA', 'USA', 'URY', 'UZB', 'VUT', 'VEN', 'VNM', 'YEM',
        'ZMB', 'ZWE']
+
+var country_objects = countries.map(c => construct_search_obj(c))
+
+start_search()
 
 var co2_prod_raw = "Production CO2 Emissions Absolute Value";
 var co2_cons_raw = "Consumption CO2 Emissions Absolute Value";
@@ -934,6 +960,8 @@ var map_svg = d3.select("#scatter_and_map")
     .attr("height", map_height + map_margin.top + map_margin.bottom)
   .append("g")
     .attr("transform", "translate("+map_margin.left+","+map_margin.top+")")
+
+
 
 var explanations = d3.select('#explainer_section')
 //  .style('border', '1px solid #d0d0d0')
