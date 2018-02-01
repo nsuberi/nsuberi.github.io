@@ -135,7 +135,10 @@ path.country {
           </select>
           CO2 Emissions</p>
       </div>
+      <button id="data_download" onclick="download_csv()">Download Data</button>
+      <!-- <a href="../final-data/All\ Data\ Together\ Concise.csv" download="ghg-gdp-divergence-data.csv" target='_blank'>Download Data</a>  -->
     </div>
+    
     <div id='graphs_and_labels'>
       <br/>
       <div class='header_labels'>
@@ -759,6 +762,14 @@ function onSelect(c){
   clicked_country = c.code
   d3.select(".mouseover_checkbox").property("checked", true)
   update_to_selected_region(c.code)
+}
+
+function download_csv() {
+    var hiddenElement = document.createElement('a');
+    hiddenElement.href ="../final-data/All\ Data\ Together\ Concise.csv";
+    hiddenElement.target = '_blank';
+    hiddenElement.download = 'ghg-gdp-divergence-data.csv';
+    hiddenElement.click();
 }
 
 /// VARIABLES COVERED
