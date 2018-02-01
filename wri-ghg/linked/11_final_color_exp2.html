@@ -437,10 +437,11 @@ function transition_scatter_and_map() {
     var cr_group = country_rankings.selectAll("g.top10cntry")
         .data(top10withIndices, function(i){return i.code})
 
+    cr_group.exit()
     cr_group.enter().append("g")
       .attr("class", "top10cntry")
-      .merge(cr_group)
-    cr_group.exit().remove()
+      //.merge(cr_group)
+
 
     cr_group
       .append("text")
@@ -847,17 +848,17 @@ var scatter_height = 560*(1+sclfctr) - sctr_margin.top - sctr_margin.bottom;
 var map_width = 620*(1-sclfctr) - map_margin.left - map_margin.right;
 var map_height = 560*(1-sclfctr) - map_margin.top - map_margin.bottom;
 
-var rcd_width = 590 - rcd_margin.left - rcd_margin.right;
+var rcd_width = 540 - rcd_margin.left - rcd_margin.right;
 var rcd_height = 500 - rcd_margin.top - rcd_margin.bottom;
 
-var cc_width = 540 - cc_margin.left - cc_margin.right;
-var cc_height = 460 - cc_margin.top - cc_margin.right;
+var cc_width = 460 - cc_margin.left - cc_margin.right;
+var cc_height = 380 - cc_margin.top - cc_margin.right;
 
-var cl_width  = cc_width
-var cl_height =  cc_height/4
+var cl_width  = rcd_width
+var cl_height =  rcd_height/4
 
-var cr_width = cc_width
-var cr_height =  cc_height*3/4
+var cr_width = rcd_width
+var cr_height =  rcd_height*3/4
 
 
 
@@ -1044,6 +1045,90 @@ var explanations = d3.select('#explainer_section')
   .style("display", "inline-block")
   .style("position", "relative")
 
+
+// Takes up 1/4 of the cc_height
+var ranking_by_compass_degree = explanations.append("svg")
+    .attr("width", rcd_width + rcd_margin.left + rcd_margin.right)
+    .attr("height", rcd_height + rcd_margin.top + rcd_margin.bottom)
+//    .style('border', '1px solid #d0d0d0')
+  .append("g")
+    .attr("transform", "translate(" + rcd_margin.left + "," + rcd_margin.top + ")")
+
+var color_line = ranking_by_compass_degree.append("g")
+    .attr("width", cl_width)
+    .attr("height",cl_height)
+    .attr("class", "color_line")
+    .attr("transform", "translate(0,0)")
+    .style('border', '1px solid #d0d0d0')
+    .style('display', 'inline-block')
+    .style('position', 'relative')
+
+/*
+// http://bl.ocks.org/AndrewStaroscik/5222370
+color_line.append("rect")
+		.attr("x", 0)
+		.attr("y", 0)
+		.attr("height", cl_height)
+		.attr("width", cl_width)
+		.style("stroke", 'black')
+		.style("fill", "none")
+		.style("stroke-width", 1); */
+
+color_line.append("g")
+  .attr("transform", "translate(0," + cl_height/2 + ")")
+  .attr("class", "color_line_x axis");
+
+color_line.selectAll(".color_line_x.axis text")
+  .attr("y", 8);
+
+var cl_xAxis = d3.axisBottom()
+  .tickValues([...Array(13).keys()].map(i=>i*15).map(i=>i-90))
+  .tickFormat(value_format)
+  .scale(cl_xscale);
+color_line.select(".color_line_x.axis")
+  .transition()
+  .call(cl_xAxis);
+color_line.selectAll(".color_line_x.axis text")
+  .transition()
+  .attr("y", 8);
+
+// Takes up 3/4 of the cc_height
+var country_rankings = ranking_by_compass_degree.append("g")
+    .attr("width", cr_width)
+    .attr("height", cr_height)
+    .attr("transform", "translate(0," + cl_height + ")")
+    .attr("class", "country_rankings")
+    .style('border', '1px solid #d0d0d0')
+    .style('display', 'inline-block')
+    .style('position', 'relative')
+
+// http://bl.ocks.org/AndrewStaroscik/5222370
+country_rankings.append("rect")
+		.attr("x", 0)
+		.attr("y", 0)
+		.attr("height", cr_height)
+		.attr("width", cr_width)
+		.style("stroke", 'black')
+		.style("fill", "none")
+		.style("stroke-width", 1);
+
+country_rankings.append("g")
+  .attr("transform", "translate(0,0)")
+  .attr("class", "cntry_ranking_y axis");
+
+country_rankings.selectAll(".cntry_ranking_y.axis text")
+  .attr("x", -8);
+
+var cr_yAxis = d3.axisLeft()
+  .tickValues([1,2,3,4,5,6,7,8,9,10])
+  .tickFormat(int_format)
+  .scale(cr_yscale);
+country_rankings.select(".cntry_ranking_y.axis")
+  .transition()
+  .call(cr_yAxis);
+
+
+
 var color_canvas = explanations.append("svg")
     .attr("width", cc_width + cc_margin.left + cc_margin.right)
     .attr("height", cc_height + cc_margin.top + cc_margin.bottom)
@@ -1144,93 +1229,6 @@ color_canvas
   .attr("x2", cc_width)
   .attr("y1", cc_height/2)
   .attr("y2", cc_height/2)
-
-// Add in linear axis showing country ranking
-// List countries in order below
-// Future work - use this metric to attempt correlations with other WBG data
-
-// Takes up 1/4 of the cc_height
-var ranking_by_compass_degree = explanations.append("svg")
-    .attr("width", rcd_width + rcd_margin.left + rcd_margin.right)
-    .attr("height", rcd_height + rcd_margin.top + rcd_margin.bottom)
-//    .style('border', '1px solid #d0d0d0')
-  .append("g")
-    .attr("transform", "translate(" + rcd_margin.left + "," + rcd_margin.top + ")")
-
-var color_line = ranking_by_compass_degree.append("g")
-    .attr("width", cl_width)
-    .attr("height",cl_height)
-    .attr("class", "color_line")
-    .attr("transform", "translate(0,0)")
-    .style('border', '1px solid #d0d0d0')
-    .style('display', 'inline-block')
-    .style('position', 'relative')
-
-/*
-// http://bl.ocks.org/AndrewStaroscik/5222370
-color_line.append("rect")
-		.attr("x", 0)
-		.attr("y", 0)
-		.attr("height", cl_height)
-		.attr("width", cl_width)
-		.style("stroke", 'black')
-		.style("fill", "none")
-		.style("stroke-width", 1); */
-
-color_line.append("g")
-  .attr("transform", "translate(0," + cl_height/2 + ")")
-  .attr("class", "color_line_x axis");
-
-color_line.selectAll(".color_line_x.axis text")
-  .attr("y", 8);
-
-var cl_xAxis = d3.axisBottom()
-  .tickValues([...Array(13).keys()].map(i=>i*15).map(i=>i-90))
-  .tickFormat(value_format)
-  .scale(cl_xscale);
-color_line.select(".color_line_x.axis")
-  .transition()
-  .call(cl_xAxis);
-color_line.selectAll(".color_line_x.axis text")
-  .transition()
-  .attr("y", 8);
-
-// Takes up 3/4 of the cc_height
-var country_rankings = ranking_by_compass_degree.append("g")
-    .attr("width", cr_width)
-    .attr("height", cr_height)
-    .attr("transform", "translate(0," + cl_height + ")")
-    .attr("class", "country_rankings")
-    .style('border', '1px solid #d0d0d0')
-    .style('display', 'inline-block')
-    .style('position', 'relative')
-
-// http://bl.ocks.org/AndrewStaroscik/5222370
-country_rankings.append("rect")
-		.attr("x", 0)
-		.attr("y", 0)
-		.attr("height", cr_height)
-		.attr("width", cr_width)
-		.style("stroke", 'black')
-		.style("fill", "none")
-		.style("stroke-width", 1);
-
-country_rankings.append("g")
-  .attr("transform", "translate(0,0)")
-  .attr("class", "cntry_ranking_y axis");
-
-country_rankings.selectAll(".cntry_ranking_y.axis text")
-  .attr("x", -8);
-
-var cr_yAxis = d3.axisLeft()
-  .tickValues([1,2,3,4,5,6,7,8,9,10])
-  .tickFormat(int_format)
-  .scale(cr_yscale);
-country_rankings.select(".cntry_ranking_y.axis")
-  .transition()
-  .call(cr_yAxis);
-
-
 
 /// CHECKBOXES
 
