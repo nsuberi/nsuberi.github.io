@@ -138,7 +138,7 @@ path.country {
       <button id="data_download" onclick="download_csv()">Download Data</button>
       <!-- <a href="../final-data/All\ Data\ Together\ Concise.csv" download="ghg-gdp-divergence-data.csv" target='_blank'>Download Data</a>  -->
     </div>
-    
+
     <div id='graphs_and_labels'>
       <br/>
       <div class='header_labels'>
@@ -764,13 +764,58 @@ function onSelect(c){
   update_to_selected_region(c.code)
 }
 
-function download_csv() {
-    var hiddenElement = document.createElement('a');
-    hiddenElement.href ="../final-data/All\ Data\ Together\ Concise.csv";
-    hiddenElement.target = '_blank';
-    hiddenElement.download = 'ghg-gdp-divergence-data.csv';
-    hiddenElement.click();
+// https://medium.com/@danny.pule/export-json-to-csv-file-using-javascript-a0b7bc5b00d2
+function convertToCSV(objArray) {
+    var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+    var str = '';
+
+    for (var i = 0; i < array.length; i++) {
+        var line = '';
+        for (var index in array[i]) {
+            if (line != '') line += ','
+
+            line += array[i][index];
+        }
+
+        str += line + '\r\n';
+    }
+
+    return str;
 }
+
+function download_csv() {
+    var items = all_data_store
+    var headers = Object.keys(items[0])
+    var fileTitle = 'ghg-gdp-divergence-data.csv'
+    if (headers) {
+        items.unshift(headers);
+    }
+
+    // Convert Object to JSON
+    var jsonObject = JSON.stringify(items);
+
+    var csv = convertToCSV(jsonObject);
+
+    var exportedFilenmae = fileTitle + '.csv' || 'export.csv';
+
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    if (navigator.msSaveBlob) { // IE 10+
+        navigator.msSaveBlob(blob, exportedFilenmae);
+    } else {
+        var link = document.createElement("a");
+        if (link.download !== undefined) { // feature detection
+            // Browsers that support HTML5 download attribute
+            var url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", exportedFilenmae);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+}
+
 
 /// VARIABLES COVERED
 
@@ -799,6 +844,8 @@ var countries = ['ALB', 'DZA', 'AND', 'AGO', 'ATG', 'ARG', 'ARM', 'AUS', 'AUT',
 var country_objects = countries.map(c => construct_search_obj(c))
 
 start_search()
+
+var all_data_store
 
 var co2_prod_raw = "Production CO2 Emissions Absolute Value";
 var co2_cons_raw = "Consumption CO2 Emissions Absolute Value";
@@ -1375,6 +1422,7 @@ d3.queue()
     });
   console.log(lookup)
   console.log(all_data)
+  all_data_store = all_data
 
   // Set scales for each metric
   Object.keys(metric_info).forEach(function(metric) {
