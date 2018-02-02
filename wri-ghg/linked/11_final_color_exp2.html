@@ -786,7 +786,7 @@ function convertToCSV(objArray) {
 function download_csv() {
     var items = all_data_store
     var headers = Object.keys(items[0])
-    var fileTitle = 'ghg-gdp-divergence-data.csv'
+    var exportedFilename = 'ghg-gdp-divergence-data.csv'
     if (headers) {
         items.unshift(headers);
     }
@@ -796,11 +796,9 @@ function download_csv() {
 
     var csv = convertToCSV(jsonObject);
 
-    var exportedFilenmae = fileTitle + '.csv' || 'export.csv';
-
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     if (navigator.msSaveBlob) { // IE 10+
-        navigator.msSaveBlob(blob, exportedFilenmae);
+        navigator.msSaveBlob(blob, exportedFilename);
     } else {
         var link = document.createElement("a");
         if (link.download !== undefined) { // feature detection
