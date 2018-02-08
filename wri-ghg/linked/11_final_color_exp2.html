@@ -329,9 +329,6 @@ function update_y_axis(metric) {
 };
 
 function transition_scatter_and_map() {
-
-  var country_values = countries.map(c => calculate_compass_info(c))
-
   // Color, size, and position scatter circles
   scatter_svg.selectAll("g.bubble")
     .transition()
@@ -418,10 +415,12 @@ function transition_scatter_and_map() {
       })
 
     // Country ranking
-    var top10 = country_values.sort(function(a,b){
-      return b.degree > a.degree
-    })
-    .slice(0,10)
+    var country_values = countries.map(c => calculate_compass_info(c))
+        .sort(function(a,b){
+          return b.degree > a.degree
+        })
+
+    var top10 = country_values.slice(0,10)
 
     console.log('displaying top 10')
     console.log(top10)
@@ -730,8 +729,8 @@ function compass_info(y,x){
       deg = 135 - deg
     }
   }
-  var rad = Math.sqrt(y**2 + x**2)
-  return [deg, rad]
+  var radius = Math.sqrt(y**2 + x**2)
+  return [deg, radius]
 }
 
 function calculate_compass_info(cntry) {
